@@ -42,14 +42,14 @@ public class Node
 {
 
     #region Private Variables
-    private int _id;
-    private float _value;  // The value of this node
+    private int _id = 0;
+    private float _value = 0;  // The value of this node
     private Dictionary<int, Connection> _connections;
 
     private NodeType _type;
-    private float _inputSum;
-    private float _outputSum;
-    private int _nodeLayer;
+    private float _inputSum = 0;
+    private float _outputSum = 0;
+    private int _nodeLayer = 0;
 
     #endregion
 
@@ -135,8 +135,11 @@ public class Node
         _id = id;
         _type = type;
         _nodeLayer = nodeLayer;
-        _connections = new Dictionary<int, Connection>();
         _value = 0;
+        _inputSum = 0;
+        _outputSum = 0;
+        _value = 0;
+        _connections = new Dictionary<int, Connection>();
     }
 
     public Node(int id, NodeType type, int nodeLayer, Dictionary<int, Connection> connections)
@@ -150,9 +153,14 @@ public class Node
         _outputSum = 0;
         for (int i = 0; i < connections.Count; i++)
         {
+            _connections.Add(connections[i].Id, connections[i]);
+        }
+        for (int i = 0; i < connections.Count; i++)
+        {
             _inputSum += connections[i].ToNodeId == id ? connections[i].Weight : 0;  // If the connection is going to this node, add the weight to the input sum
             _outputSum += connections[i].FromNodeId == id ? connections[i].Weight : 0;  // If the connection is coming from this node, add the weight to the output sum
         }
+        _value = Sigmoid(_inputSum);
     }
 
     public Node(int id, NodeType type, int nodeLayer, float value)

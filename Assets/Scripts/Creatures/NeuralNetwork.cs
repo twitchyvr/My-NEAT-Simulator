@@ -65,13 +65,19 @@ public class NeuralNetwork
         int nodeId = 0;
         for (int i = 0; i < _netLayers.Length; i++)
         {
+            int connId = 0;
             for (int j = 0; j < _netLayers[i]; j++)
             {
                 Node.NodeType thisNodeType;
                 if (i == 0) thisNodeType = Node.NodeType.Input;
                 else if (i == _netLayers.Length - 1) thisNodeType = Node.NodeType.Output;
                 else thisNodeType = Node.NodeType.Hidden;
-                _nodes[i] = new Node(nodeId++, thisNodeType, i);
+                _nodes[nodeId] = new Node(nodeId++, thisNodeType, i);
+                if (i == 1)
+                {
+                    Connection newConn = new(connId++, 0, _nodes[0].Id, _nodes[1].Id, UnityEngine.Random.Range(-1f, 1f));
+                    _nodes[i].AddConnection(newConn);
+                }
             }
         }
 

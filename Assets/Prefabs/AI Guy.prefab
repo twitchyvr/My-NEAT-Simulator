@@ -504,8 +504,8 @@ MonoBehaviour:
   Age: 0
   Energy: 100
   MaxEnergy: 100
-  MyManager: {fileID: 0}
-  MyTarget: {fileID: 0}
+  MyManager: {fileID: 585850378456658182, guid: 339693f2cd522444c9406a168eb44aa8, type: 3}
+  MyTarget: {fileID: 6855806191119263013, guid: 1ef31a2125f734765844574bff19277d, type: 3}
   MyNumber: 0
 --- !u!1 &8475881276201003862
 GameObject:
