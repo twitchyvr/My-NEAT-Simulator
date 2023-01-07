@@ -73,7 +73,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     public float GetEnergy { get { return Energy; } }
     public float GetMaxEnergy { get { return MaxEnergy; } }
     public NeuralNetwork GetNeuralNetwork { get { return _neuralNetwork; } }
-
+    public int[] GetNeuralNetworkLayers { get { return _neuralNetworkLayers; } set { _neuralNetworkLayers = value; } }
     float ICreature.Health { get { return Health; } set { Health = value; } }
     float ICreature.MaxHealth { get { return MaxHealth; } set { MaxHealth = value; } }
     int ICreature.Age { get { return Age; } }
@@ -82,9 +82,6 @@ public class HumanAgent : MonoBehaviour, ICreature
     #endregion
 
     #region Init
-    // Awake is called before Start.
-    // It is used to initialize any variables or game state before the game starts.
-    // Awake is called only once during the lifetime of the script instance.
     protected void Awake()
     {
         _cam = _cam != null ? _cam : Camera.main;    // If a camera is not set here, use the default one.
@@ -92,24 +89,16 @@ public class HumanAgent : MonoBehaviour, ICreature
         _rigidbody = GetComponent<Rigidbody>();
 
     }
-    // Start is called before the first frame update.
-    protected void Start()
-    {
-
-    }
-
     #endregion
 
     #region Loop
-    // Update is called once per frame.
-    protected void Update()
-    {
-
-    }
     // FixedUpdate is called once per physics step.
     protected void FixedUpdate()
     {
-
+        if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+        {
+            Move(Input.GetAxis("Vertical"), Input.GetAxis("Horizontal"));
+        }
     }
     // LateUpdate is called once per frame after all Update functions have been called, but before rendering.
     protected void LateUpdate()
@@ -149,6 +138,12 @@ public class HumanAgent : MonoBehaviour, ICreature
     {
         _neuralNetwork = new NeuralNetwork(_neuralNetworkLayers);
         _neuralNetwork.Init();
+    }
+
+    public void Move(float a, float t)
+    {
+        _transform.Translate(a * Time.deltaTime * Vector3.forward);
+        _transform.Rotate(t * Time.deltaTime * Vector3.up * 100);
     }
     #endregion
 }

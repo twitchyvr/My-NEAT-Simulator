@@ -429,6 +429,7 @@ GameObject:
   - component: {fileID: 3882432028001320157}
   - component: {fileID: 720678769200704669}
   - component: {fileID: 5665963261158910650}
+  - component: {fileID: 3679635250859227293}
   m_Layer: 0
   m_Name: AI Guy
   m_TagString: Untagged
@@ -484,6 +485,28 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 84
   m_CollisionDetection: 2
+--- !u!114 &3679635250859227293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7689993811997631971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4423594bab9464bbca5b6635d97c7b05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _cam: {fileID: 0}
+  _neuralNetworkLayers: 0800000002000000
+  Health: 100
+  MaxHealth: 100
+  Age: 0
+  Energy: 100
+  MaxEnergy: 100
+  MyManager: {fileID: 0}
+  MyTarget: {fileID: 0}
+  MyNumber: 0
 --- !u!1 &8475881276201003862
 GameObject:
   m_ObjectHideFlags: 0

@@ -39,7 +39,8 @@ using UnityEngine;
 #endregion
 
 
-public class PopulationManager : MonoBehaviour {
+public class PopulationManager : MonoBehaviour
+{
 
     #region Settable Variables
     [SerializeField] private GameObject _agentPrefab;
@@ -60,6 +61,7 @@ public class PopulationManager : MonoBehaviour {
     [SerializeField] private int _bestGeneration = 0;
     [SerializeField] private int _bestTrial = 0;
     [SerializeField] private int _bestTrialTime = 0;
+    [SerializeField] private int[] _netLayers = new int[] { 8, 2 };
     #endregion
 
     #region Private Variables
@@ -84,26 +86,31 @@ public class PopulationManager : MonoBehaviour {
     public int BestGeneration { get => _bestGeneration; set => _bestGeneration = value; }
     public int BestTrial { get => _bestTrial; set => _bestTrial = value; }
     public int BestTrialTime { get => _bestTrialTime; set => _bestTrialTime = value; }
-        #endregion
+    public int[] NetLayers { get => _netLayers; set => _netLayers = value; }
+    #endregion
 
     #region Init
     // Awake is called before Start.
     // It is used to initialize any variables or game state before the game starts.
     // Awake is called only once during the lifetime of the script instance.
-    protected void Awake() {
+    protected void Awake()
+    {
 
     }
     // Start is called before the first frame update.
-    protected void Start() {
+    protected void Start()
+    {
         // This method is used to initialize any variables or game state before the game starts.
         // Start is called on the frame when a script is enabled just before any of the Update methods is called the first time.
         // Start is called only once during the lifetime of the script instance.
-        for (int i = 0; i < PopulationSize; i++) {
+        for (int i = 0; i < PopulationSize; i++)
+        {
             Vector3 startingPos = new Vector3(this.transform.position.x + Random.Range(-2, 2), 0, this.transform.position.z + Random.Range(-2, 2));
             GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
+            agent.name = "Agent " + i;
             agent.GetComponent<HumanAgent>().Init();
             agent.GetComponent<HumanAgent>().MyManager = this;
-            agent.GetComponent<HumanAgent>().MyBrain = agent.GetComponent<NeuralNetwork>();
+            agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork(NetLayers);
             agent.GetComponent<HumanAgent>().MyTarget = Target;
             agent.GetComponent<HumanAgent>().MyNumber = i;
             Agents.Add(agent);
@@ -114,17 +121,20 @@ public class PopulationManager : MonoBehaviour {
 
     #region Loop
     // Update is called once per frame.
-    protected void Update() {
+    protected void Update()
+    {
         // This is the main game loop method.
 
     }
     // FixedUpdate is called once per physics step.
-    protected void FixedUpdate() {
+    protected void FixedUpdate()
+    {
         // This method is used to update physics related variables.
 
     }
     // LateUpdate is called once per frame after all Update functions have been called, but before rendering.
-    protected void LateUpdate() {
+    protected void LateUpdate()
+    {
         // Called after all Update functions. It is used to order script execution.
         // A Camera or other tracking code should go here for example.
 
