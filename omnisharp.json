@@ -1,0 +1,21 @@
+{
+    "RoslynExtensionsOptions": {
+        "EnableAnalyzersSupport": true,
+        "LocationPaths": [
+            "./NuGet/microsoft.unity.analyzers.1.15.0/analyzers/dotnet/cs"
+        ]
+    },
+    "FormattingOptions": {
+        "NewLine": "\n",
+        "IndentationSize": 4,
+        "NewLinesForBracesInMethods": false,
+        "NewLinesForBracesInAccessors": false,
+        "NewLinesForBracesInAnonymousMethods": false,
+        "NewLinesForBracesInAnonymousTypes": false,
+        "NewLinesForBracesInControlBlocks": false,
+        "NewLinesForBracesInLambdaExpressionBody": false,
+        "NewLinesForBracesInObjectCollectionArrayInitializers": false,
+        "NewLinesForBracesInProperties": false,
+        "NewLinesForBracesInTypes": false
+    }
+}
