@@ -121,6 +121,17 @@ public class Connection
         this.isRecurrent = connection.isRecurrent;
     }
 
+    public Connection(int newConnId, Node fromNode, Node toNode)
+    {
+        this.id = newConnId;
+        this.innovationId = 0;
+        this.fromNodeId = fromNode.Id;
+        this.toNodeId = toNode.Id;
+        this.weight = 0f;
+        this.enabled = true;
+        this.isRecurrent = false;
+    }
+
     public Connection(int newConnId, int innovationId, int fromNodeId, int toNodeId, float weight)
     {
         this.id = newConnId;

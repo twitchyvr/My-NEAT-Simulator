@@ -130,6 +130,17 @@ public class Node
         _nodeLayer = node.NodeLayer;
     }
 
+    public Node(int id, int layer)
+    {
+        _id = id;
+        _type = NodeType.Input;
+        _value = 0;
+        _connections = new Dictionary<int, Connection>();
+        _inputSum = 0;
+        _outputSum = 0;
+        _nodeLayer = layer;
+    }
+
     public Node(int id, NodeType type, int nodeLayer)
     {
         _id = id;

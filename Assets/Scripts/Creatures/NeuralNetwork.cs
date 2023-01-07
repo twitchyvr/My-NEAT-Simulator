@@ -64,19 +64,25 @@ public class NeuralNetwork
 
         int nodeId = 0;
         int connId = 0;
+
+        // Create new input and output nodes.  Increment each node id number.  Connect input nodes to output nodes with Connections.
         for (int i = 0; i < _netLayers.Length; i++)
         {
             for (int j = 0; j < _netLayers[i]; j++)
             {
-                Node.NodeType thisNodeType;
-                if (i == 0) thisNodeType = Node.NodeType.Input;
-                else if (i == _netLayers.Length - 1) thisNodeType = Node.NodeType.Output;
-                else thisNodeType = Node.NodeType.Hidden;
-                _nodes[nodeId] = new Node(nodeId++, thisNodeType, i);
-                if (i == 1)
+                Node node = new(nodeId++, i);
+                _nodes.Add(node.Id, node);
+
+                if (i > 0)
                 {
-                    Connection newConn = new(connId++, 0, _nodes[0].Id, _nodes[1].Id, UnityEngine.Random.Range(-1f, 1f));
-                    _nodes[i].AddConnection(newConn);
+                    for (int k = 0; k < _netLayers[i - 1]; k++)
+                    {
+                        // Connect the previous layer's nodes to the current layer's nodes.
+                        // _nodes[k] is the previous layer's node.
+                        Connection conn = new(connId, _nodes[k], node);
+                        _nodes[k].AddConnection(conn);
+                        connId++;
+                    }
                 }
             }
         }
