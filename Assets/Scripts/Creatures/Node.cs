@@ -43,8 +43,8 @@ public class Node
 
     #region Private Variables
     private int _id;
-    private float _value;
-    private List<Connection> _connections;
+    private float _value;  // The value of this node
+    private Dictionary<int, Connection> _connections;
 
     private NodeType _type;
     private float _inputSum;
@@ -66,7 +66,7 @@ public class Node
         set { _value = value; }
     }
 
-    public List<Connection> Connections
+    public Dictionary<int, Connection> Connections
     {
         get { return _connections; }
         set { _connections = value; }
@@ -96,6 +96,8 @@ public class Node
         set { _nodeLayer = value; }
     }
 
+    #endregion
+    #region Enums
     public enum NodeType
     {
         Input,
@@ -106,23 +108,43 @@ public class Node
     #endregion
 
     #region Methods
+    public Node(int id)
+    {
+        _id = id;
+    }
 
     public Node(int id, NodeType type, int nodeLayer)
     {
         _id = id;
         _type = type;
         _nodeLayer = nodeLayer;
-        _connections = new List<Connection>();
+    }
+
+    public Node(int id, NodeType type)
+    {
+        _id = id;
+        _type = type;
+    }
+
+    public Node(Node node)
+    {
+        _id = node.Id;
+        _value = node.Value;
+        _connections = node.Connections;
+        _type = node.Type;
+        _inputSum = node.InputSum;
+        _outputSum = node.OutputSum;
+        _nodeLayer = node.NodeLayer;
     }
 
     public void AddConnection(Connection connection)
     {
-        _connections.Add(connection);
+        _connections.Add(connection.Id, connection);
     }
 
     public void RemoveConnection(Connection connection)
     {
-        _connections.Remove(connection);
+        _connections.Remove(connection.Id);
     }
 
     public void RemoveAllConnections()

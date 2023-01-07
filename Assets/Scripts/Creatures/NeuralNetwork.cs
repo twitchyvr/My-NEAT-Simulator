@@ -47,7 +47,7 @@ public class NeuralNetwork
 
     #region Private Variables
     private int[] _netLayers;
-    private Node[][] _nodes;
+    private Dictionary<int, Node> _nodes;
     #endregion
 
     #region Properties
@@ -62,8 +62,18 @@ public class NeuralNetwork
         else
             _netLayers = new int[2] { 8, 2 };
 
-
-        _nodes = new Node[_netLayers.Length][];
+        int nodeId = 0;
+        for (int i = 0; i < _netLayers.Length; i++)
+        {
+            for (int j = 0; j < _netLayers[i]; j++)
+            {
+                Node.NodeType thisNodeType;
+                if (i == 0) thisNodeType = Node.NodeType.Input;
+                else if (i == _netLayers.Length - 1) thisNodeType = Node.NodeType.Output;
+                else thisNodeType = Node.NodeType.Hidden;
+                _nodes[i] = new Node(nodeId++, thisNodeType, i);
+            }
+        }
 
     }
 

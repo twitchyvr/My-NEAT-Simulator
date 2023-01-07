@@ -42,6 +42,7 @@ public class Connection
 {
 
     #region Settable Variables
+    private int id;
     private int innovationId;
     private int fromNodeId;
     private int toNodeId;
@@ -54,6 +55,11 @@ public class Connection
     #endregion
 
     #region Properties
+    public int Id
+    {
+        get { return id; }
+        set { id = value; }
+    }
     public int InnovationId
     {
         get { return innovationId; }
@@ -93,8 +99,9 @@ public class Connection
     #endregion
 
     #region Methods
-    public Connection(int innovationId, int fromNodeId, int toNodeId, float weight, bool enabled, bool isRecurrent)
+    public Connection(int connectionId, int innovationId, int fromNodeId, int toNodeId, float weight, bool enabled, bool isRecurrent)
     {
+        this.id = connectionId;
         this.innovationId = innovationId;
         this.fromNodeId = fromNodeId;
         this.toNodeId = toNodeId;
@@ -105,6 +112,7 @@ public class Connection
 
     public Connection(Connection connection)
     {
+        this.id = connection.id;
         this.innovationId = connection.innovationId;
         this.fromNodeId = connection.fromNodeId;
         this.toNodeId = connection.toNodeId;
@@ -113,9 +121,43 @@ public class Connection
         this.isRecurrent = connection.isRecurrent;
     }
 
+    public Connection(int newConnId, int innovationId, int fromNodeId, int toNodeId, float weight)
+    {
+        this.id = newConnId;
+        this.innovationId = innovationId;
+        this.fromNodeId = fromNodeId;
+        this.toNodeId = toNodeId;
+        this.weight = weight;
+        this.enabled = true;
+        this.isRecurrent = false;
+    }
+
+    public Connection(int newConnId, int innovationId, int fromNodeId, int toNodeId)
+    {
+        this.id = newConnId;
+        this.innovationId = innovationId;
+        this.fromNodeId = fromNodeId;
+        this.toNodeId = toNodeId;
+        this.weight = 0f;
+        this.enabled = true;
+        this.isRecurrent = false;
+    }
+
+    public Connection(int newConnId, int innovationId, int fromNodeId, int toNodeId, bool isConnRecurrent)
+    {
+        this.id = newConnId;
+        this.innovationId = innovationId;
+        this.fromNodeId = fromNodeId;
+        this.toNodeId = toNodeId;
+        this.weight = 0f;
+        this.enabled = true;
+        this.isRecurrent = isConnRecurrent;
+    }
+
     public override string ToString()
     {
         return
+            "Id: " + id + ", " +
             "InnovationId: " + innovationId + ", " +
             "FromNodeId: " + fromNodeId + ", " +
             "ToNodeId: " + toNodeId + ", " +
