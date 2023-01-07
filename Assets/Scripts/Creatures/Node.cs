@@ -111,19 +111,12 @@ public class Node
     public Node(int id)
     {
         _id = id;
-    }
-
-    public Node(int id, NodeType type, int nodeLayer)
-    {
-        _id = id;
-        _type = type;
-        _nodeLayer = nodeLayer;
-    }
-
-    public Node(int id, NodeType type)
-    {
-        _id = id;
-        _type = type;
+        _type = NodeType.Input;
+        _value = 0;
+        _connections = new Dictionary<int, Connection>();
+        _inputSum = 0;
+        _outputSum = 0;
+        _nodeLayer = 0;
     }
 
     public Node(Node node)
@@ -135,6 +128,40 @@ public class Node
         _inputSum = node.InputSum;
         _outputSum = node.OutputSum;
         _nodeLayer = node.NodeLayer;
+    }
+
+    public Node(int id, NodeType type, int nodeLayer)
+    {
+        _id = id;
+        _type = type;
+        _nodeLayer = nodeLayer;
+        _connections = new Dictionary<int, Connection>();
+        _value = 0;
+    }
+
+    public Node(int id, NodeType type, int nodeLayer, Dictionary<int, Connection> connections)
+    {
+        _id = id;
+        _type = type;
+        _nodeLayer = nodeLayer;
+        _connections = connections;
+        _value = 0;
+        _inputSum = 0;
+        _outputSum = 0;
+        for (int i = 0; i < connections.Count; i++)
+        {
+            _inputSum += connections[i].ToNodeId == id ? connections[i].Weight : 0;  // If the connection is going to this node, add the weight to the input sum
+            _outputSum += connections[i].FromNodeId == id ? connections[i].Weight : 0;  // If the connection is coming from this node, add the weight to the output sum
+        }
+    }
+
+    public Node(int id, NodeType type, int nodeLayer, float value)
+    {
+        _id = id;
+        _type = type;
+        _nodeLayer = nodeLayer;
+        _connections = new Dictionary<int, Connection>();
+        _value = value;
     }
 
     public void AddConnection(Connection connection)
