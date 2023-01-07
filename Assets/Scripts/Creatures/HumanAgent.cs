@@ -137,7 +137,6 @@ public class HumanAgent : MonoBehaviour, ICreature
     public void Init()
     {
         _neuralNetwork = new NeuralNetwork(_neuralNetworkLayers);
-        _neuralNetwork.Init();
     }
 
     public void Move(float a, float t)

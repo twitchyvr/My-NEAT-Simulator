@@ -66,29 +66,23 @@ public class NeuralNetwork
         int nodeId = 0;
         int connId = 0;
 
-        // Create new input and output nodes.  Increment each node id number.  Connect input nodes to output nodes with Connections.
+        // Create nodes for each layer
         for (int i = 0; i < _netLayers.Length; i++)
         {
             for (int j = 0; j < _netLayers[i]; j++)
             {
-                // Create a new node.
-                Node node = new(nodeId++, i);
-                // Add the node to the dictionary.
-                if (!_nodes.Keys.Contains(node.Id))
-                    _nodes.Add(node.Id, node);
+                Node.NodeType type = Node.NodeType.Hidden;
+                if (i == 0)
+                    type = Node.NodeType.Input;
+                else if (i == _netLayers.Length - 1)
+                    type = Node.NodeType.Output;
 
-                if (i > 0)
-                {
-                    for (int k = 0; k < _netLayers[i - 1]; k++)
-                    {
-                        // Connect the previous layer's nodes to the current layer's nodes.
-                        // _nodes[k] is the previous layer's node.
-                        Connection conn = new(connId++, _nodes[k], node.Id);
-                        _nodes[k].AddConnection(conn);
-                    }
-                }
+                Node node = new Node(nodeId, type, i);
+                _nodes.Add(nodeId, node);
+                nodeId++;
             }
         }
+
 
     }
 
