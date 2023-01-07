@@ -42,13 +42,13 @@ public class Connection
 {
 
     #region Settable Variables
-    private int id;
-    private int innovationId;
-    private int fromNodeId;
-    private int toNodeId;
-    private float weight;
-    private bool enabled;
-    private bool isRecurrent;
+    private int id = 0;
+    private int innovationId = 0;
+    private int fromNodeId = 0;
+    private int toNodeId = 0;
+    private float weight = 0f;
+    private bool enabled = true;
+    private bool isRecurrent = false;
     #endregion
 
     #region Private Variables
