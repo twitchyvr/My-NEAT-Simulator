@@ -29,6 +29,7 @@
 //using System.Linq;
 //using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 //using UnityEngine;
 //using UnityEngine.AI;
 //using UnityEngine.UI;
@@ -70,8 +71,11 @@ public class NeuralNetwork
         {
             for (int j = 0; j < _netLayers[i]; j++)
             {
+                // Create a new node.
                 Node node = new(nodeId++, i);
-                _nodes.Add(node.Id, node);
+                // Add the node to the dictionary.
+                if (!_nodes.Keys.Contains(node.Id))
+                    _nodes.Add(node.Id, node);
 
                 if (i > 0)
                 {
@@ -79,9 +83,8 @@ public class NeuralNetwork
                     {
                         // Connect the previous layer's nodes to the current layer's nodes.
                         // _nodes[k] is the previous layer's node.
-                        Connection conn = new(connId, _nodes[k], node);
+                        Connection conn = new(connId++, _nodes[k], node.Id);
                         _nodes[k].AddConnection(conn);
-                        connId++;
                     }
                 }
             }
