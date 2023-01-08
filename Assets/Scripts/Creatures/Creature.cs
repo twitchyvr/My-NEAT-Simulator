@@ -41,13 +41,13 @@ using UnityEngine;
 public class Creature : MonoBehaviour
 {
     #region Properties
-    public float Health { get; private set; } = 100f;
-    public float MinHealth { get; private set; } = 0f;
-    public float MaxHealth { get; private set; } = 100f;
     public float Age { get; private set; } = 0;
     public float MaxAge { get; private set; } = 100;
     public float Energy { get; private set; } = 100f;
+    public float Health { get; private set; } = 100f;
+    public float MinHealth { get; private set; } = 0f;
     public float MinEnergy { get; private set; } = 0f;
+    public float MaxHealth { get; private set; } = 100f;
     public float MaxEnergy { get; private set; } = 100f;
     #endregion
 
@@ -116,16 +116,18 @@ public class Creature : MonoBehaviour
 #region Interfaces
 public interface ICreature
 {
+    float Age { get; }
     float Health { get; }
+    float Energy { get; }
+    float MaxAge { get; set; }
     float MinHealth { get; set; }
     float MaxHealth { get; set; }
-    float Age { get; }
-    float MaxAge { get; set; }
-    float Energy { get; }
     float MinEnergy { get; set; }
     float MaxEnergy { get; set; }
-    PopulationManager MyManager { get; set; }
     int MyNumber { get; set; }
+
+    PopulationManager MyManager { get; set; }
+
     void AddAge(float age);
     void AddHealth(float health);
     void SubtractHealth(float health);

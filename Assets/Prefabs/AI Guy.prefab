@@ -502,7 +502,7 @@ MonoBehaviour:
   _moveMultiplier: 50
   _turnMultiplier: 500
   Age: 0
-  MaxAge: 100
+  MaxAge: 1000
   Health: 100
   MaxHealth: 100
   MinHealth: 0

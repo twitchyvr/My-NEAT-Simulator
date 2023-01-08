@@ -84,6 +84,7 @@ public class NeuralNetwork
                     type = Node.NodeType.Output;
 
                 Node node = new(nodeId, type, i);
+                if (type != Node.NodeType.Input) node.Init();
                 _nodes.Add(nodeId, node);
                 nodeId++;
             }
@@ -152,6 +153,29 @@ public class NeuralNetwork
         {
             _nodes[i].Evaluate();
         }
+    }
+
+    public Dictionary<int, Node> FeedForward(Dictionary<int, Node> inputValues)
+    {
+        // Set input values
+        for (int i = 0; i < _netLayers[0]; i++)
+        {
+            _nodes[i].Value = inputValues[i].Value;
+        }
+
+        // Evaluate network
+        for (int i = 0; i < _nodes.Count; i++)
+        {
+            _nodes[i].Evaluate();
+        }
+
+        // Return output values
+        Dictionary<int, Node> outputValues = new();
+        for (int i = 0; i < _netLayers[^1]; i++)
+        {
+            outputValues.Add(i, _nodes[_nodes.Count - _netLayers[^1] + i]);
+        }
+        return outputValues;
     }
     #endregion
 }

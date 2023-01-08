@@ -43,6 +43,11 @@ public class GameManager : MonoBehaviour
 {
     public static bool IsPaused = false;
     public GameObject SelectedCreature;
+    //    public GameObject CreatureInfoPanel;
+    public GameObject FoodPrefab;
+    public float FoodSpawnMaxX = 80;
+    public float FoodSpawnMaxZ = 80f;
+    public int FoodCount = 10;
     float CreatureHealth = 0f;
     float CreatureAge = 0f;
     float CreatureEnergy = 0f;
@@ -58,6 +63,14 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region Init
+    protected void Awake()
+    {
+        // Instantiate food prefabs around the map randomly within a specific x and z range.
+        for (int i = 0; i < FoodCount; i++)
+        {
+            Instantiate(FoodPrefab, new Vector3(Random.Range(-FoodSpawnMaxX, FoodSpawnMaxX), 0, Random.Range(-FoodSpawnMaxZ, FoodSpawnMaxZ)), Quaternion.identity);
+        }
+    }
     #endregion
 
     #region Loop
@@ -82,7 +95,6 @@ public class GameManager : MonoBehaviour
     private void GetCreatureInfo()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             Debug.Log("Hit: " + hit.collider.gameObject.name, hit.collider.gameObject);
@@ -91,10 +103,8 @@ public class GameManager : MonoBehaviour
                 print("Hit was a Creature.");
                 if (hit.collider.gameObject.TryGetComponent(out HumanAgent creature))
                 {
-
                     // When the object is clicked, output this to the console
                     Debug.Log("You selected the " + hit.collider.gameObject.name); // ensure you picked right object
-
                     SelectedCreature = hit.collider.gameObject;
                     SelectedCreature.GetComponent<HumanAgent>().MyManager.AgentSelected(SelectedCreature); // Effectively this makes the selected agent the only one that can move.
                     CreatureName = hit.collider.gameObject.name;

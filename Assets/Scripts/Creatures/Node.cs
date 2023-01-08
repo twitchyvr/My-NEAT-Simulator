@@ -249,18 +249,30 @@ public class Node
 
     public void Evaluate()
     {
+        // If the node is an input node, return
         if (_type == NodeType.Input)
         {
             return;
         }
+
+        for (int i = 0; i < _connections.Count; i++)
+        {
+            _inputSum += _connections[i].ToNodeId == _id ? _connections[i].Weight * _connections[i].FromNodeId : 0;  // If the connection is going to this node, add the weight to the input sum
+        }
+    }
+
+    public void Init(float value = -1)
+    {
+        if (value == -1)
+        {
+            _value = UnityEngine.Random.Range(-1f, 1f);
+        }
         else
         {
-            for (int i = 0; i < _connections.Count; i++)
-            {
-                _inputSum += _connections[i].ToNodeId == _id ? _connections[i].Weight * _connections[i].FromNodeId : 0;  // If the connection is going to this node, add the weight to the input sum
-            }
-            _value = Tanh(_inputSum);
+            _value = value;
         }
+        _inputSum = 0;
+        _outputSum = 0;
     }
     #endregion
 }

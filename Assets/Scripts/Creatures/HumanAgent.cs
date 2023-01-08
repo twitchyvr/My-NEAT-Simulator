@@ -48,8 +48,9 @@ public class HumanAgent : MonoBehaviour, ICreature
     [SerializeField] private int[] _neuralNetworkLayers = new int[] { 8, 0, 4 };
     [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
     [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
+    [SerializeField][Range(0.0001f, 1f)] private float _inputBias = 0.25f;
     public float Age = 0;
-    public float MaxAge = 100;
+    public float MaxAge = 100f;
     public float Health = 100f;
     public float MaxHealth = 100f;
     public float MinHealth = 0f;
@@ -156,7 +157,7 @@ public class HumanAgent : MonoBehaviour, ICreature
         if (Health - health < MinHealth)
         {
             Health = MinHealth;
-            Death();
+            Death(2);
         }
         else
         {
@@ -189,7 +190,7 @@ public class HumanAgent : MonoBehaviour, ICreature
         if (Energy - energy < MinEnergy)
         {
             Energy = MinEnergy;
-            Death();
+            SubtractHealth(energy);
         }
         else
         {
@@ -258,6 +259,10 @@ public class HumanAgent : MonoBehaviour, ICreature
         {
             Death();
         }
+        Dictionary<int, Node> outputs = ProcessInputs();
+        Move(outputs[0].Value, outputs[1].Value);
+
+
         _lastUpdateTime = Time.time;
     }
 
@@ -290,13 +295,54 @@ public class HumanAgent : MonoBehaviour, ICreature
     {
         if (other.gameObject.CompareTag("Food"))
         {
-            AddEnergy(1f);
+            AddEnergy(other.gameObject.TryGetComponent<PlantCreature>(out PlantCreature plant) ? plant.FoodEnergySupplied : 0); // If the object has a plant component, use that, otherwise use 0.
             Destroy(other.gameObject);
         }
         if (other.gameObject.CompareTag("Wall"))
         {
             Death(3);
         }
+    }
+
+    public Dictionary<int, Node> ProcessInputs()
+    {
+        // Get the inputs
+        float[] inputs = new float[_neuralNetworkLayers[0]];
+        inputs[0] = _transform.position.x;
+        inputs[1] = _transform.position.z;
+        inputs[2] = 0;
+        inputs[3] = 0;
+        inputs[4] = 0;
+        inputs[5] = 0;
+        inputs[6] = 0;
+        inputs[7] = _inputBias;
+
+        // Store the inputs in a dictionary
+        Dictionary<int, Node> inputDictionary = new();
+        for (int i = 0; i < inputs.Length; i++)
+        {
+            if (i == inputs.Length - 1)
+            {
+                inputDictionary.Add(i, new Node(i, Node.NodeType.Bias, 0, inputs[i]));
+            }
+            else
+            {
+                inputDictionary.Add(i, new Node(i, Node.NodeType.Input, 0, inputs[i]));
+            }
+        }
+
+
+        // Get the outputs
+        Dictionary<int, Node> outputs = _neuralNetwork.FeedForward(inputDictionary);
+
+        // Process the outputs
+        float[] outputArray = new float[outputs.Count];
+        for (int i = 0; i < outputs.Count; i++)
+        {
+            outputArray[i] = outputs[i].Value;
+        }
+
+        return outputs;
     }
 
     #endregion

@@ -514,6 +514,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4809457367929059417}
   - component: {fileID: -7371051949903814781}
+  - component: {fileID: -6304661415497586119}
   m_Layer: 0
   m_Name: Plant
   m_TagString: Food
@@ -550,6 +551,28 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 2, z: 1}
   m_Center: {x: 0, y: -0.41, z: 0}
+--- !u!114 &-6304661415497586119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6855806191119263013}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e590e5e22c824e8aa1ad85703f8198a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MyNumber: 0
+  Age: 0
+  Health: 0
+  Energy: 0
+  MaxAge: 1000
+  MinHealth: 0
+  MaxHealth: 0
+  MaxEnergy: 0
+  MinEnergy: 0
+  MyManager: {fileID: 0}
 --- !u!1 &8988965947937806075
 GameObject:
   m_ObjectHideFlags: 0
