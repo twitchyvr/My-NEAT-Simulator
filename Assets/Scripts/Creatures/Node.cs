@@ -50,6 +50,7 @@ public class Node
     private float _inputSum = 0;
     private float _outputSum = 0;
     private int _nodeLayer = 0;
+    private float _desiredValue = 0;
 
     #endregion
 
@@ -96,11 +97,18 @@ public class Node
         set { _nodeLayer = value; }
     }
 
+    public float DesiredValue
+    {
+        get { return _desiredValue; }
+        set { _desiredValue = value; }
+    }
+
     #endregion
     #region Enums
     public enum NodeType
     {
         Input,
+        Bias,
         Hidden,
         Output
     }
@@ -211,6 +219,48 @@ public class Node
     public float Sigmoid(float x)
     {
         return 1 / (1 + MathF.Exp(-x));
+    }
+
+    public float Tanh(float x)
+    {
+        return (MathF.Exp(x) - MathF.Exp(-x)) / (MathF.Exp(x) + MathF.Exp(-x)); // This is faster than MathF.Tanh(x)
+        //return MathF.Tanh(x);
+    }
+
+    /// <summary>
+    /// Evaluates the node
+    /// </summary>
+    /// <param name="inputs">The inputs to the network</param>
+    public void Evaluate(float[] inputs)
+    {
+        if (_type == NodeType.Input)
+        {
+            _value = inputs[_id];
+        }
+        else
+        {
+            for (int i = 0; i < inputs.Length; i++)
+            {
+                _inputSum += _connections[i].ToNodeId == _id ? _connections[i].Weight * inputs[i] : 0;  // If the connection is going to this node, add the weight to the input sum
+            }
+            _value = Tanh(_inputSum);
+        }
+    }
+
+    public void Evaluate()
+    {
+        if (_type == NodeType.Input)
+        {
+            return;
+        }
+        else
+        {
+            for (int i = 0; i < _connections.Count; i++)
+            {
+                _inputSum += _connections[i].ToNodeId == _id ? _connections[i].Weight * _connections[i].FromNodeId : 0;  // If the connection is going to this node, add the weight to the input sum
+            }
+            _value = Tanh(_inputSum);
+        }
     }
     #endregion
 }

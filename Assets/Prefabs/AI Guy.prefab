@@ -498,7 +498,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cam: {fileID: 0}
-  _neuralNetworkLayers: 0800000002000000
+  _neuralNetworkLayers: 080000000000000002000000
   _moveMultiplier: 50
   _turnMultiplier: 500
   Age: 0

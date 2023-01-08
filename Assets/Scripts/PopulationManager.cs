@@ -60,7 +60,7 @@ public class PopulationManager : MonoBehaviour
     [SerializeField] private int _bestGeneration = 0;
     [SerializeField] private int _bestTrial = 0;
     [SerializeField] private int _bestTrialTime = 0;
-    [SerializeField] private int[] _netLayers = new int[] { 8, 2 };
+    [SerializeField] private int[] _netLayers = new int[] { 8, 0, 2 };
     #endregion
 
     #region Private Variables

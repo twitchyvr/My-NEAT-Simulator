@@ -45,7 +45,7 @@ public class HumanAgent : MonoBehaviour, ICreature
 {
     #region Settable Variables
     [SerializeField] Camera _cam;
-    [SerializeField] private int[] _neuralNetworkLayers = new int[] { 8, 4 };
+    [SerializeField] private int[] _neuralNetworkLayers = new int[] { 8, 0, 4 };
     [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
     [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
     public float Age = 0;

@@ -41,7 +41,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance;
     public static bool IsPaused = false;
     public GameObject SelectedCreature;
     float CreatureHealth = 0f;
@@ -68,6 +67,16 @@ public class GameManager : MonoBehaviour
         {
             GetCreatureInfo();
         }
+        if (SelectedCreature != null)
+        {
+            if (SelectedCreature.TryGetComponent(out HumanAgent creature))
+            {
+                CreatureName = SelectedCreature.name;
+                CreatureHealth = creature.Health;
+                CreatureAge = creature.Age;
+                CreatureEnergy = creature.Energy;
+            }
+        }
     }
 
     private void GetCreatureInfo()
@@ -82,13 +91,13 @@ public class GameManager : MonoBehaviour
                 print("Hit was a Creature.");
                 if (hit.collider.gameObject.TryGetComponent(out HumanAgent creature))
                 {
-                    print("Got Creature component: " + creature.name);
+
                     // When the object is clicked, output this to the console
                     Debug.Log("You selected the " + hit.collider.gameObject.name); // ensure you picked right object
 
-
                     SelectedCreature = hit.collider.gameObject;
-                    CreatureName = SelectedCreature.name;
+                    SelectedCreature.GetComponent<HumanAgent>().MyManager.AgentSelected(SelectedCreature); // Effectively this makes the selected agent the only one that can move.
+                    CreatureName = hit.collider.gameObject.name;
                     CreatureHealth = creature.Health;
                     CreatureAge = creature.Age;
                     CreatureEnergy = creature.Energy;
@@ -105,9 +114,7 @@ public class GameManager : MonoBehaviour
         GUI.Label(new Rect(10, 70, 100, 20), $"Energy: {CreatureEnergy}");
     }
 
-
     #endregion
-
     #region Methods
     // Your custom methods go here
 

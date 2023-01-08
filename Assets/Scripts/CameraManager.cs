@@ -46,7 +46,7 @@ public class CameraManager : MonoBehaviour
 
     #endregion
     #region Private Variables
-
+    private Vector3 _lastMousePos;
     #endregion
     #region Init
     protected void Awake()
@@ -65,10 +65,17 @@ public class CameraManager : MonoBehaviour
             _cam.orthographicSize -= Input.mouseScrollDelta.y;
         }
 
-        // Move the camera to follow the selected PopulationManager Agent if it exists
+        // Use the right mouse button to drag the orthographic camera around the x and z positions, while y stays at 10.85
+        if (Input.GetMouseButton(1))
+        {
+            Vector3 delta = _lastMousePos - Input.mousePosition;
+            delta = new Vector3(delta.x, 0, delta.y);
+            delta *= 0.25f;
+            delta = new Vector3(delta.x, 0, delta.z);
+            _cam.transform.position += delta;
+        }
 
-
-
+        _lastMousePos = Input.mousePosition;
     }
 
     #endregion
