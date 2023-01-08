@@ -227,6 +227,25 @@ public class Node
         //return MathF.Tanh(x);
     }
 
+    public static float[] Softmax(float[] x)
+    {
+        float[] expX = new float[x.Length];
+        float sumExpX = 0;
+
+        for (int i = 0; i < x.Length; i++)
+        {
+            expX[i] = MathF.Exp(x[i]);
+            sumExpX += expX[i];
+        }
+
+        for (int i = 0; i < x.Length; i++)
+        {
+            expX[i] /= sumExpX;
+        }
+
+        return expX;
+    }
+
     /// <summary>
     /// Evaluates the node
     /// </summary>
