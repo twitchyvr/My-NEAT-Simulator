@@ -76,15 +76,16 @@ public class GameManager : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            print("Hit: " + hit.collider.gameObject.name);
+            Debug.Log("Hit: " + hit.collider.gameObject.name, hit.collider.gameObject);
             if (hit.collider.gameObject.CompareTag("Creature"))
             {
                 print("Hit was a Creature.");
-                if (hit.collider.gameObject.TryGetComponent<Creature>(out var creature))
+                if (hit.collider.gameObject.TryGetComponent(out HumanAgent creature))
                 {
                     print("Got Creature component: " + creature.name);
-                    // Color the selected creature red
-                    creature.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.red);
+                    // When the object is clicked, output this to the console
+                    Debug.Log("You selected the " + hit.collider.gameObject.name); // ensure you picked right object
+
 
                     SelectedCreature = hit.collider.gameObject;
                     CreatureName = SelectedCreature.name;
