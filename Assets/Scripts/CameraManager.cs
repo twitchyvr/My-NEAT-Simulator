@@ -38,77 +38,41 @@ using UnityEngine;
 //using UnityEngine.Serialization;
 #endregion
 
-
-public class GameManager : MonoBehaviour
+public class CameraManager : MonoBehaviour
 {
-    public static GameManager Instance;
-    public static bool IsPaused = false;
-    public GameObject SelectedCreature;
-    float CreatureHealth = 0f;
-    float CreatureAge = 0f;
-    float CreatureEnergy = 0f;
-    string CreatureName = "";
 
     #region Settable Variables
-    #endregion
+    [SerializeField] Camera _cam;
 
+    #endregion
     #region Private Variables
-    #endregion
 
-    #region Properties
     #endregion
-
     #region Init
-    #endregion
+    protected void Awake()
+    {
+        _cam = _cam != null ? _cam : Camera.main;
 
+    }
+
+    #endregion
     #region Loop
-    protected void Update()
+    protected void LateUpdate()
     {
-        if (Input.GetMouseButtonDown(0))
+        // Zoom if the user scrolls the mouse wheel
+        if (Input.mouseScrollDelta.y != 0)
         {
-            GetCreatureInfo();
+            _cam.orthographicSize -= Input.mouseScrollDelta.y;
         }
+
+        // Move the camera to follow the selected PopulationManager Agent if it exists
+
+
+
     }
-
-    private void GetCreatureInfo()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        if (Physics.Raycast(ray, out RaycastHit hit))
-        {
-            print("Hit: " + hit.collider.gameObject.name);
-            if (hit.collider.gameObject.CompareTag("Creature"))
-            {
-                print("Hit was a Creature.");
-                if (hit.collider.gameObject.TryGetComponent<Creature>(out var creature))
-                {
-                    print("Got Creature component: " + creature.name);
-                    // Color the selected creature red
-                    creature.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.red);
-
-                    SelectedCreature = hit.collider.gameObject;
-                    CreatureName = SelectedCreature.name;
-                    CreatureHealth = creature.Health;
-                    CreatureAge = creature.Age;
-                    CreatureEnergy = creature.Energy;
-                }
-            }
-        }
-    }
-
-    public void OnGUI()
-    {
-        GUI.Label(new Rect(10, 10, 100, 20), $"Creature: {CreatureName}");
-        GUI.Label(new Rect(10, 30, 100, 20), $"Health: {CreatureHealth}");
-        GUI.Label(new Rect(10, 50, 100, 20), $"Age: {CreatureAge}");
-        GUI.Label(new Rect(10, 70, 100, 20), $"Energy: {CreatureEnergy}");
-    }
-
 
     #endregion
-
     #region Methods
-    // Your custom methods go here
 
     #endregion
 }

@@ -38,7 +38,6 @@ using UnityEngine;
 //using UnityEngine.Serialization;
 #endregion
 
-
 public class PopulationManager : MonoBehaviour
 {
 
@@ -48,7 +47,7 @@ public class PopulationManager : MonoBehaviour
     [SerializeField] private float _elapsed = 0;
     [SerializeField] private int _trialTime = 10;
     [SerializeField] private int _generation = 1;
-    [SerializeField] private List<GameObject> _agents = new List<GameObject>();
+    [SerializeField] private List<GameObject> _agents = new();
     [SerializeField] private GameObject _target;
     [SerializeField] private bool _allAgentsDead = false;
     [SerializeField] private float _elapsedSinceLastBest = 0;
@@ -87,17 +86,11 @@ public class PopulationManager : MonoBehaviour
     public int BestTrial { get => _bestTrial; set => _bestTrial = value; }
     public int BestTrialTime { get => _bestTrialTime; set => _bestTrialTime = value; }
     public int[] NetLayers { get => _netLayers; set => _netLayers = value; }
+    public GameObject Instance;
+    public GameObject SelectedAgent;
     #endregion
 
     #region Init
-    // Awake is called before Start.
-    // It is used to initialize any variables or game state before the game starts.
-    // Awake is called only once during the lifetime of the script instance.
-    protected void Awake()
-    {
-
-    }
-    // Start is called before the first frame update.
     protected void Start()
     {
         // This method is used to initialize any variables or game state before the game starts.
@@ -105,7 +98,8 @@ public class PopulationManager : MonoBehaviour
         // Start is called only once during the lifetime of the script instance.
         for (int i = 0; i < PopulationSize; i++)
         {
-            Vector3 startingPos = new Vector3(this.transform.position.x + Random.Range(-2, 2), 0, this.transform.position.z + Random.Range(-2, 2));
+            Instance = this.gameObject;
+            Vector3 startingPos = new(this.transform.position.x + Random.Range(-2, 2), 0, this.transform.position.z + Random.Range(-2, 2));
             GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
             agent.name = "Agent " + i;
             agent.GetComponent<HumanAgent>().Init();
@@ -117,33 +111,28 @@ public class PopulationManager : MonoBehaviour
         }
     }
 
-    #endregion
+    public void AgentSelected(GameObject agent)
+    {
+        SelectedAgent = agent;
+        // make the selected agent the only one that can move
+        foreach (GameObject a in Agents)
+        {
+            if (a != agent)
+            {
+                a.GetComponent<HumanAgent>().enabled = false;
+            }
+            else
+            {
+                a.GetComponent<HumanAgent>().enabled = true;
+            }
+        }
+    }
 
+    #endregion
     #region Loop
-    // Update is called once per frame.
-    protected void Update()
-    {
-        // This is the main game loop method.
-
-    }
-    // FixedUpdate is called once per physics step.
-    protected void FixedUpdate()
-    {
-        // This method is used to update physics related variables.
-
-    }
-    // LateUpdate is called once per frame after all Update functions have been called, but before rendering.
-    protected void LateUpdate()
-    {
-        // Called after all Update functions. It is used to order script execution.
-        // A Camera or other tracking code should go here for example.
-
-    }
-
+    // Loop methods here
     #endregion
-
     #region Methods
     // Your custom methods go here
-
     #endregion
 }
