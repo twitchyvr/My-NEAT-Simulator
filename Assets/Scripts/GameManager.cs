@@ -27,10 +27,9 @@
 #region Usings
 //using System;
 //using System.Linq;
-//using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-//using UnityEngine;
+using UnityEngine;
 //using UnityEngine.AI;
 //using UnityEngine.UI;
 //using UnityEngine.Events;
@@ -39,69 +38,75 @@ using System.Linq;
 //using UnityEngine.Serialization;
 #endregion
 
-public class NeuralNetwork
+
+public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance;
+    public static bool IsPaused = false;
+    public GameObject SelectedCreature;
+    float CreatureHealth = 0f;
+    float CreatureAge = 0f;
+    float CreatureEnergy = 0f;
+    string CreatureName = "";
 
     #region Settable Variables
-
     #endregion
 
     #region Private Variables
-    private int[] _netLayers;
-    private Dictionary<int, Node> _nodes = new();
     #endregion
 
     #region Properties
-    public int[] NetLayers { get { return _netLayers; } }
+    #endregion
+
+    #region Init
+    #endregion
+
+    #region Loop
+    protected void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            GetCreatureInfo();
+        }
+    }
+
+    private void GetCreatureInfo()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            if (hit.collider.gameObject.CompareTag("Creature"))
+            {
+
+                if (hit.collider.gameObject.TryGetComponent<Creature>(out var creature))
+                {
+                    // Color the selected creature red
+                    creature.GetComponent<Renderer>().material.color = Color.red;
+
+                    SelectedCreature = hit.collider.gameObject;
+                    CreatureName = SelectedCreature.name;
+                    CreatureHealth = creature.Health;
+                    CreatureAge = creature.Age;
+                    CreatureEnergy = creature.Energy;
+                }
+            }
+        }
+    }
+
+    public void OnGUI()
+    {
+        GUI.Label(new Rect(10, 10, 100, 20), $"Creature: {CreatureName}");
+        GUI.Label(new Rect(10, 30, 100, 20), $"Health: {CreatureHealth}");
+        GUI.Label(new Rect(10, 50, 100, 20), $"Age: {CreatureAge}");
+        GUI.Label(new Rect(10, 70, 100, 20), $"Energy: {CreatureEnergy}");
+    }
+
+
     #endregion
 
     #region Methods
-    public void Init(int[] netLayers = null)
-    {
-        if (netLayers != null)
-            _netLayers = netLayers;
-        else
-            _netLayers = new int[2] { 8, 2 };
-
-        int nodeId = 0;
-        int connId = 0;
-
-        // Create nodes for each layer
-        for (int i = 0; i < _netLayers.Length; i++)
-        {
-            for (int j = 0; j < _netLayers[i]; j++)
-            {
-                Node.NodeType type = Node.NodeType.Hidden;
-                if (i == 0)
-                    type = Node.NodeType.Input;
-                else if (i == _netLayers.Length - 1)
-                    type = Node.NodeType.Output;
-
-                Node node = new Node(nodeId, type, i);
-                _nodes.Add(nodeId, node);
-                nodeId++;
-            }
-        }
-
-        // Create connections from input nodes to output nodes only
-        for (int i = 0; i < _netLayers[0]; i++)
-        {
-            for (int j = 0; j < _netLayers[^1]; j++)
-            {
-                Connection conn = new(connId, _nodes[i], _nodes[_nodes.Count - _netLayers[^1] + j]);
-                _nodes[i].AddConnection(conn);
-                _nodes[_nodes.Count - _netLayers[^1] + j].AddConnection(conn);
-                connId++;
-            }
-        }
-
-
-    }
-
-    public NeuralNetwork(int[] netLayers = null)
-    {
-        Init(netLayers);
-    }
+    // Your custom methods go here
 
     #endregion
 }

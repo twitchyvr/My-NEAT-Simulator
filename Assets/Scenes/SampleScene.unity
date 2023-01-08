@@ -418,6 +418,14 @@ PrefabInstance:
       propertyPath: _target
       value: 
       objectReference: {fileID: 303999621}
+    - target: {fileID: 585850378456658182, guid: 339693f2cd522444c9406a168eb44aa8, type: 3}
+      propertyPath: _allAgentsDead
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 585850378456658182, guid: 339693f2cd522444c9406a168eb44aa8, type: 3}
+      propertyPath: _populationSize
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 585850378456658183, guid: 339693f2cd522444c9406a168eb44aa8, type: 3}
       propertyPath: m_Name
       value: Population Manager

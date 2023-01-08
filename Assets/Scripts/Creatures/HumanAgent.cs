@@ -38,22 +38,27 @@ using UnityEngine;
 //using UnityEngine.Serialization;
 #endregion
 
-
+/// <Summary>
+/// A HumanAgent is a type of creature.
+/// </Summary>
 public class HumanAgent : MonoBehaviour, ICreature
 {
-
     #region Settable Variables
     [SerializeField] Camera _cam;
-    [SerializeField] private int[] _neuralNetworkLayers = new int[] { 8, 2 };
+    [SerializeField] private int[] _neuralNetworkLayers = new int[] { 8, 4 };
+    [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
+    [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
+    public float Age = 0;
+    public float MaxAge = 100;
     public float Health = 100f;
     public float MaxHealth = 100f;
-    public int Age = 0;
+    public float MinHealth = 0f;
     public float Energy = 100f;
     public float MaxEnergy = 100f;
+    public float MinEnergy = 0f;
     public PopulationManager MyManager;
     public NeuralNetwork MyBrain { get { return _neuralNetwork; } set { _neuralNetwork = value; } }
     public GameObject MyTarget;
-
     public int MyNumber = 0;
     #endregion
 
@@ -61,24 +66,31 @@ public class HumanAgent : MonoBehaviour, ICreature
     private Transform _transform;
     private Rigidbody _rigidbody;
     private NeuralNetwork _neuralNetwork;
+    private float _timeSinceBirth = 0f;
+    private float _birthTime = 0f;
+    private float _lastUpdateTime = 0f;
     #endregion
 
     #region Properties
-    public Transform GetTransform { get { return _transform; } } // Example getter for the _transform property
-    public Rigidbody GetRigidbody { get { return _rigidbody; } } // Example getter for the _rigidbody property
-
+    public float GetAge { get { return Age; } }
+    public float GetEnergy { get { return Energy; } }
     public float GetHealth { get { return Health; } }
     public float GetMaxHealth { get { return MaxHealth; } }
-    public int GetAge { get { return Age; } }
-    public float GetEnergy { get { return Energy; } }
     public float GetMaxEnergy { get { return MaxEnergy; } }
+    public Transform GetTransform { get { return _transform; } }
+    public Rigidbody GetRigidbody { get { return _rigidbody; } }
     public NeuralNetwork GetNeuralNetwork { get { return _neuralNetwork; } }
     public int[] GetNeuralNetworkLayers { get { return _neuralNetworkLayers; } set { _neuralNetworkLayers = value; } }
-    float ICreature.Health { get { return Health; } set { Health = value; } }
-    float ICreature.MaxHealth { get { return MaxHealth; } set { MaxHealth = value; } }
-    int ICreature.Age { get { return Age; } }
+    int ICreature.MyNumber { get { return MyNumber; } set { MyNumber = value; } }
+    float ICreature.Age { get { return Age; } }
+    float ICreature.Health { get { return Health; } }
     float ICreature.Energy { get { return Energy; } }
-    float ICreature.MaxEnergy { get { return MaxEnergy; } }
+    float ICreature.MaxAge { get { return MaxAge; } set { MaxAge = value; } }
+    float ICreature.MinHealth { get { return MinHealth; } set { MinHealth = value; } }
+    float ICreature.MaxHealth { get { return MaxHealth; } set { MaxHealth = value; } }
+    float ICreature.MaxEnergy { get { return MaxEnergy; } set { MaxEnergy = value; } }
+    float ICreature.MinEnergy { get { return MinEnergy; } set { MinEnergy = value; } }
+    PopulationManager ICreature.MyManager { get { return MyManager; } set { MyManager = value; } }
     #endregion
 
     #region Init
@@ -87,62 +99,205 @@ public class HumanAgent : MonoBehaviour, ICreature
         _cam = _cam != null ? _cam : Camera.main;    // If a camera is not set here, use the default one.
         _transform = transform;                         // This will only be ran once
         _rigidbody = GetComponent<Rigidbody>();
-
+        _birthTime = Time.time;
+        _timeSinceBirth = 0f;
     }
     #endregion
 
     #region Loop
-    // FixedUpdate is called once per physics step.
     protected void FixedUpdate()
     {
         if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
         {
             Move(Input.GetAxis("Vertical"), Input.GetAxis("Horizontal"));
         }
+
+        CreatureUpdate();
     }
-    // LateUpdate is called once per frame after all Update functions have been called, but before rendering.
-    protected void LateUpdate()
+    #endregion
+
+    #region Methods
+
+    /// <summary>
+    /// The AddAge method will add age to the creature. If the age added is greater than the max age, the age will be set to the max age.
+    /// </summary>
+    /// <param name="age">The amount of age to add.</param>
+    public void AddAge(float age)
     {
-
+        if (Age + age > MaxAge)
+        {
+            Age = MaxAge;
+            Death();
+        }
+        else
+        {
+            Age += age;
+        }
     }
 
-    public void AddAge(int age)
-    {
-        throw new System.NotImplementedException();
-    }
-
+    /// <summary>
+    /// The AddHealth method will add health to the creature. If the health added is greater than the max health, the health will be set to the max health.
+    /// </summary>
+    /// <param name="health">The amount of health to add.</param>
     public void AddHealth(float health)
     {
-        throw new System.NotImplementedException();
+        if (Health + health > MaxHealth)
+        {
+            Health = MaxHealth;
+        }
+        else
+        {
+            Health += health;
+        }
     }
 
     public void SubtractHealth(float health)
     {
-        throw new System.NotImplementedException();
+        if (Health - health < MinHealth)
+        {
+            Health = MinHealth;
+            Death();
+        }
+        else
+        {
+            Health -= health;
+        }
     }
 
+    /// <summary>
+    /// The AddEnergy method will add energy to the creature. If the energy added is greater than the max energy, the energy will be set to the max energy.
+    /// </summary>
+    /// <param name="energy">The amount of energy to add.</param>
     public void AddEnergy(float energy)
     {
-        throw new System.NotImplementedException();
+        if (Energy + energy > MaxEnergy)
+        {
+            Energy = MaxEnergy;
+        }
+        else
+        {
+            Energy += energy;
+        }
     }
 
+    /// <summary>
+    /// The SubtractEnergy method will subtract energy from the creature. If the energy subtracted is less than 0, the energy will be set to 0.
+    /// </summary>
+    /// <param name="energy">The amount of energy to subtract.</param>
     public void SubtractEnergy(float energy)
     {
-        throw new System.NotImplementedException();
+        if (Energy - energy < MinEnergy)
+        {
+            Energy = MinEnergy;
+            Death();
+        }
+        else
+        {
+            Energy -= energy;
+        }
     }
 
-    #endregion
-
-    #region Methods
     public void Init()
     {
         _neuralNetwork = new NeuralNetwork(_neuralNetworkLayers);
     }
 
+    /// <summary>
+    /// The Move method will move the creature based on the input.
+    /// </summary>
+    /// <param name="a">The amount to move forward.</param>
+    /// <param name="t">The amount to turn.</param>
     public void Move(float a, float t)
     {
-        _transform.Translate(a * Time.deltaTime * Vector3.forward);
-        _transform.Rotate(t * Time.deltaTime * Vector3.up * 100);
+        _transform.Translate(_moveMultiplier * a * Time.deltaTime * Vector3.forward);
+        _transform.Rotate(_turnMultiplier * t * Time.deltaTime * Vector3.up);
     }
+
+    public void SetTarget(GameObject target)
+    {
+        MyTarget = target;
+    }
+
+    public void SetManager(PopulationManager manager)
+    {
+        MyManager = manager;
+    }
+
+    public void SetNumber(int number)
+    {
+        MyNumber = number;
+    }
+
+    public void SetNeuralNetwork(NeuralNetwork neuralNetwork)
+    {
+        _neuralNetwork = neuralNetwork;
+    }
+
+    public void SetNeuralNetworkLayers(int[] layers)
+    {
+        _neuralNetworkLayers = layers;
+    }
+
+    public void CreatureUpdate()
+    {
+        // Update time since birth
+        _timeSinceBirth = Time.time - _birthTime;
+        float timeSinceLastUpdate = Time.time - _lastUpdateTime;
+
+        // Add age based on seconds lived
+        AddAge(timeSinceLastUpdate);
+
+        // Remove energy based on seconds lived (1 energy per second)
+        SubtractEnergy(Time.deltaTime);
+
+        if (Energy <= MinEnergy)
+        {
+            SubtractHealth(Time.deltaTime);
+        }
+        if (Health <= MinHealth)
+        {
+            Death();
+        }
+        _lastUpdateTime = Time.time;
+    }
+
+    void Death(int reason = 0)
+    {
+        string myName = this.name;
+        switch (reason)
+        {
+            case 1:
+                Debug.Log("Creature " + myName + " died of energy deprivation.");
+                break;
+
+            case 2:
+                Debug.Log("Creature " + myName + " died of poor health.");
+                break;
+
+            case 3:
+                Debug.Log("Creature " + myName + " died by colliding with a wall.");
+                break;
+
+            default:
+                Debug.Log("Creature " + myName + " died of old age.");
+                break;
+        }
+
+        Destroy(gameObject);
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        if (other.gameObject.CompareTag("Food"))
+        {
+            AddEnergy(1f);
+            Destroy(other.gameObject);
+        }
+        if (other.gameObject.CompareTag("Wall"))
+        {
+            Death(3);
+        }
+    }
+
     #endregion
 }

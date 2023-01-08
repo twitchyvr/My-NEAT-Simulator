@@ -432,7 +432,7 @@ GameObject:
   - component: {fileID: 3679635250859227293}
   m_Layer: 0
   m_Name: AI Guy
-  m_TagString: Untagged
+  m_TagString: Creature
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -499,11 +499,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _cam: {fileID: 0}
   _neuralNetworkLayers: 0800000002000000
+  _moveMultiplier: 50
+  _turnMultiplier: 500
+  Age: 0
+  MaxAge: 100
   Health: 100
   MaxHealth: 100
-  Age: 0
+  MinHealth: 0
   Energy: 100
   MaxEnergy: 100
+  MinEnergy: 0
   MyManager: {fileID: 585850378456658182, guid: 339693f2cd522444c9406a168eb44aa8, type: 3}
   MyTarget: {fileID: 6855806191119263013, guid: 1ef31a2125f734765844574bff19277d, type: 3}
   MyNumber: 0

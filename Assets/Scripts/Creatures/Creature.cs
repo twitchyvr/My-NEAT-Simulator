@@ -40,68 +40,96 @@ using UnityEngine;
 
 public class Creature : MonoBehaviour
 {
-
-    #region Settable Variables
-    #endregion
-
-    #region Private Variables
-    private float _health = 100f;
-    private float _maxHealth = 100f;
-    private int _age = 0;
-    private int _maxAge = 100;
-    private float _energy = 100f;
-    private float _maxEnergy = 100f;
-
-    #endregion
-
     #region Properties
-    public float Health { get { return _health; } set { _health = value; } }
-    public float MaxHealth { get { return _maxHealth; } set { _maxHealth = value; } }
-    public int Age { get { return _age; } }
-    public int MaxAge { get { return _maxAge; } }
-    public float Energy { get { return _energy; } }
-    public float MaxEnergy { get { return _maxEnergy; } }
+    public float Health { get; private set; } = 100f;
+    public float MinHealth { get; private set; } = 0f;
+    public float MaxHealth { get; private set; } = 100f;
+    public float Age { get; private set; } = 0;
+    public float MaxAge { get; private set; } = 100;
+    public float Energy { get; private set; } = 100f;
+    public float MinEnergy { get; private set; } = 0f;
+    public float MaxEnergy { get; private set; } = 100f;
     #endregion
 
     #region Methods
     public void AddAge(int age)
     {
-        _age += age;
+        if (Age + age > MaxAge)
+        {
+            Age = MaxAge;
+        }
+        else
+        {
+            Age += age;
+        }
     }
 
     public void AddHealth(float health)
     {
-        _health += health;
+        if (Health + health > MaxHealth)
+        {
+            Health = MaxHealth;
+        }
+        else
+        {
+            Health += health;
+        }
     }
 
     public void SubtractHealth(float health)
     {
-        _health -= health;
+        if (Health - health < MinHealth)
+        {
+            Health = MinHealth;
+        }
+        else
+        {
+            Health -= health;
+        }
     }
 
     public void AddEnergy(float energy)
     {
-        _energy += energy;
+        if (Energy + energy > MaxEnergy)
+        {
+            Energy = MaxEnergy;
+        }
+        else
+        {
+            Energy += energy;
+        }
     }
 
     public void SubtractEnergy(float energy)
     {
-        _energy -= energy;
+        if (Energy - energy < 0)
+        {
+            Energy = 0;
+        }
+        else
+        {
+            Energy -= energy;
+        }
     }
     #endregion
 }
 #region Interfaces
 public interface ICreature
 {
-    float Health { get; set; }
+    float Health { get; }
+    float MinHealth { get; set; }
     float MaxHealth { get; set; }
-    int Age { get; }
+    float Age { get; }
+    float MaxAge { get; set; }
     float Energy { get; }
-    float MaxEnergy { get; }
-    void AddAge(int age);
+    float MinEnergy { get; set; }
+    float MaxEnergy { get; set; }
+    PopulationManager MyManager { get; set; }
+    int MyNumber { get; set; }
+    void AddAge(float age);
     void AddHealth(float health);
     void SubtractHealth(float health);
     void AddEnergy(float energy);
     void SubtractEnergy(float energy);
-    #endregion
 }
+#endregion
