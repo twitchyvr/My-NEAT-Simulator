@@ -500,11 +500,12 @@ MonoBehaviour:
   _cam: {fileID: 0}
   AgentMoveAcceleration: 0
   AgentTurnTorque: 0
-  _neuralNetworkLayers: 080000000000000002000000
+  _neuralNetworkLayers: 090000000000000002000000
   _moveMultiplier: 50
   _turnMultiplier: 500
   _inputBias: 0.25
   MaxFoodDistance: 3
+  MaxWallDistance: 5
   BrainFitness: 0
   Age: 0
   MaxAge: 1000

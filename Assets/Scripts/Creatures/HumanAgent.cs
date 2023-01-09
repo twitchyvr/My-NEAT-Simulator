@@ -47,11 +47,12 @@ public class HumanAgent : MonoBehaviour, ICreature
     [SerializeField] Camera _cam;
     [Range(-1f, 1f)] public float AgentMoveAcceleration = 0f;
     [Range(-1f, 1f)] public float AgentTurnTorque = 0f;
-    [SerializeField] private int[] _neuralNetworkLayers = new int[] { 8, 0, 4 };
+    [SerializeField] private int[] _neuralNetworkLayers = new int[] { 9, 0, 4 };
     [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
     [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
     [SerializeField][Range(0.0001f, 1f)] private float _inputBias = 0.25f;
-    public float MaxFoodDistance = 3f;
+    public float MaxFoodDistance = 5f;
+    public float MaxWallDistance = 5f;
     public float BrainFitness = 0f;
     public float Age = 0;
     public float MaxAge = 100f;
@@ -320,27 +321,48 @@ public class HumanAgent : MonoBehaviour, ICreature
     {
         // Get the inputs
         float[] inputs = new float[_neuralNetworkLayers[0]];
-        inputs[0] = _transform.position.x;
-        inputs[1] = _transform.position.z;
-        inputs[2] = 0;  // food sensor
-        inputs[3] = 0;
-        inputs[4] = 0;
-        inputs[5] = 0;
-        inputs[6] = 0;
-        inputs[7] = _inputBias;
+        inputs[0] = _transform.position.x;  // x position sensor
+        inputs[1] = _transform.position.z;  // z position sensor
+        inputs[2] = 0;                      // food sensor
+        inputs[3] = 0;                      // wall sensor 1 forward+left
+        inputs[4] = 0;                      // wall sensor 2 forward+right
+        inputs[5] = GetEnergy;              // energy sensor
+        inputs[6] = GetHealth;              // health sensor
+        inputs[7] = GetAge;                 // age sensor
+        inputs[8] = _inputBias;             // bias
 
-        // Raycast to find the closest food
-        RaycastHit hit;
+        Vector3 forward = _transform.forward;
+        Vector3 right = _transform.right;
+        Vector3 left = -_transform.right;
+        Vector3 forwardRight = forward + right;
+        Vector3 forwardLeft = forward + left;
 
-        if (Physics.Raycast(_transform.position, _transform.forward, out hit, MaxFoodDistance))
+        // Raycast to find the closest food using input[2]
+        if (Physics.Raycast(_transform.position, forward, out RaycastHit hit, MaxFoodDistance))
         {
             if (hit.collider.gameObject.CompareTag("Food"))
             {
+                Debug.DrawLine(_transform.position, hit.point, Color.green, 0.2f);
                 inputs[2] = hit.distance / MaxFoodDistance;
             }
-            if (hit.collider.gameObject.CompareTag("Wall"))
+        }
+
+        // Raycast to find the closest walls diagonally using input[3] and input [4]
+        if (Physics.Raycast(_transform.position, forwardLeft, out RaycastHit hit1, MaxWallDistance))
+        {
+            if (hit1.collider.gameObject.CompareTag("Wall"))
             {
-                inputs[3] = hit.distance / MaxFoodDistance;
+                Debug.DrawLine(_transform.position, hit1.point, Color.red, 0.2f);
+                inputs[3] = hit1.distance / MaxWallDistance;
+            }
+        }
+
+        if (Physics.Raycast(_transform.position, forwardRight, out RaycastHit hit2, MaxWallDistance))
+        {
+            if (hit2.collider.gameObject.CompareTag("Wall"))
+            {
+                Debug.DrawLine(_transform.position, hit2.point, Color.red, 0.2f);
+                inputs[4] = hit2.distance / MaxWallDistance;
             }
         }
 
