@@ -179,7 +179,7 @@ public class Node
             _inputSum += connections[i].ToNodeId == id ? connections[i].Weight : 0;  // If the connection is going to this node, add the weight to the input sum
             _outputSum += connections[i].FromNodeId == id ? connections[i].Weight : 0;  // If the connection is coming from this node, add the weight to the output sum
         }
-        _value = Sigmoid(_inputSum);
+        _value = Tanh(_inputSum);
     }
 
     public Node(int id, NodeType type, int nodeLayer, float value)
@@ -260,14 +260,22 @@ public class Node
         {
             _value = 1;
         }
-        else
+
+        for (int i = 0; i < _connections.Count; i++)
         {
-            for (int i = 0; i < inputs.Length; i++)
+            if (_connections.TryGetValue(i, out Connection connection))
             {
-                _inputSum += _connections[i].ToNodeId == _id ? _connections[i].Weight * inputs[i] : 0;  // If the connection is going to this node, add the weight to the input sum
+                if (connection.ToNodeId == _id && connection.FromNodeId != _id)
+                {
+                    _inputSum += connection.Weight;
+                }
+                if (connection.FromNodeId == _id && connection.ToNodeId != _id)
+                {
+                    _outputSum += connection.Weight;
+                }
             }
-            _value = Sigmoid(_inputSum);
         }
+        _value = Tanh(_inputSum);
     }
 
     public void Evaluate()
@@ -280,8 +288,19 @@ public class Node
 
         for (int i = 0; i < _connections.Count; i++)
         {
-            _inputSum += _connections[i].ToNodeId == _id ? _connections[i].Weight * _connections[i].FromNodeId : 0;  // If the connection is going to this node, add the weight to the input sum
+            if (_connections.TryGetValue(i, out Connection connection))
+            {
+                if (connection.ToNodeId == _id && connection.FromNodeId != _id)
+                {
+                    _inputSum += connection.Weight;
+                }
+                if (connection.FromNodeId == _id && connection.ToNodeId != _id)
+                {
+                    _outputSum += connection.Weight;
+                }
+            }
         }
+        _value = Tanh(_inputSum);
     }
 
     public void Init(float value = -1)

@@ -131,11 +131,16 @@ public class GameManager : MonoBehaviour
             {
                 foreach ((int currentNodeId, Node currentNode) in creature.MyBrain.Nodes)
                 {
+                    /*
                     foreach ((int currentConnId, Connection currentConnection) in currentNode.Connections)
                     {
                         GUI.Label(new Rect(10, nodePos, 300, 20), $"Node: {currentNode.Id} - Connection: {currentConnection.Id} - Weight: {currentConnection.Weight}");
                         nodePos += 15;
                     }
+                     */
+
+                    GUI.Label(new Rect(10, nodePos, 300, 20), $"Node: {currentNode.Id} - Value: {currentNode.Value}");
+                    nodePos += 15;
                 }
             }
         }
