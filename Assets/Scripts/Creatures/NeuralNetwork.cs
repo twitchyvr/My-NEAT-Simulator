@@ -248,7 +248,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         }
     }
 
-    public void Crossover(NeuralNetwork otherParent)
+    public NeuralNetwork Crossover(NeuralNetwork otherParent)
     {
         // Crossover weights
         foreach ((int connectionId, Connection connectionItem) in _connections)
@@ -261,6 +261,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         {
             nodeItem.Crossover(otherParent._nodes[nodeId]);
         }
+
+        return this;
     }
 
     public void Copy(NeuralNetwork otherParent)
@@ -322,6 +324,31 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
             fitness += nodeItem.CalculateNodeFitness(); // Calculate node fitness by comparing node value to desired value
         }
         Fitness = fitness;
+    }
+
+    public void AddNode(int connectionId)
+    {
+        // Create new node
+        int newNodeId = _nodes.Count + 1;
+        Node newNode = new(newNodeId, Node.NodeType.Hidden);
+
+        // Create new connections
+        int newConnectionId1 = _connections.Count + 1;
+        Connection newConnection1 = new(newConnectionId1, _connections[connectionId].FromNodeId, newNodeId, _connections[connectionId].Weight);
+        int newConnectionId2 = _connections.Count + 2;
+        Connection newConnection2 = new(newConnectionId2, newNodeId, _connections[connectionId].ToNodeId, 1);
+
+        // Add new connections to nodes
+        _nodes[_connections[connectionId].FromNodeId].AddConnection(newConnection1);
+        newNode.AddConnection(newConnection1);
+        newNode.AddConnection(newConnection2);
+        _nodes[_connections[connectionId].ToNodeId].AddConnection(newConnection2);
+
+        // Add new node to network
+        _nodes.Add(newNodeId, newNode);
+
+        // Disable old connection
+        _connections[connectionId].Enabled = false;
     }
     #endregion
 }

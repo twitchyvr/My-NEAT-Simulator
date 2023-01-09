@@ -301,7 +301,7 @@ public class HumanAgent : MonoBehaviour, ICreature
                 Debug.Log("Creature " + myName + " died of old age.");
                 break;
         }
-
+        MyManager.Agents.Remove(this.gameObject);
         Destroy(gameObject);
     }
 
@@ -341,7 +341,7 @@ public class HumanAgent : MonoBehaviour, ICreature
         Vector3 forwardLeft = forward + left;
 
         // Adjust the raycast so it is angled slightly down toward the ground
-        forward.y = -0.2f;
+        forward.y = -0.01f;
 
         // Raycast to find the closest food using input[2]
         if (Physics.Raycast(_transform.position, forward, out RaycastHit hit, MaxFoodDistance))

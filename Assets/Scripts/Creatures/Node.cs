@@ -127,6 +127,17 @@ public class Node
         _nodeLayer = 0;
     }
 
+    public Node(int id, NodeType type)
+    {
+        _id = id;
+        _type = type;
+        _value = 0;
+        _connections = new Dictionary<int, Connection>();
+        _inputSum = 0;
+        _outputSum = 0;
+        _nodeLayer = 0;
+    }
+
     public Node(Node node)
     {
         _id = node.Id;
@@ -311,7 +322,12 @@ public class Node
 
     internal void Mutate()
     {
-        throw new NotImplementedException();
+        // Mutate the node values and connections weights
+        _value = UnityEngine.Random.Range(-1f, 1f);
+        for (int i = 0; i < _connections.Count; i++)
+        {
+            _connections[i].Mutate();
+        }
     }
 
     internal void Reset()
@@ -344,10 +360,6 @@ public class Node
         _outputSum = node.OutputSum;
         _nodeLayer = node.NodeLayer;
         _connections = new Dictionary<int, Connection>();
-        for (int i = 0; i < node.Connections.Count; i++)
-        {
-            _connections.Add(node.Connections[i].Id, node.Connections[i]);
-        }
     }
 
     internal float CalculateNodeFitness()

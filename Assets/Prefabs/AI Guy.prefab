@@ -508,12 +508,12 @@ MonoBehaviour:
   MaxWallDistance: 10
   BrainFitness: 0
   Age: 0
-  MaxAge: 1000
-  Health: 100
-  MaxHealth: 100
+  MaxAge: 100
+  Health: 10
+  MaxHealth: 10
   MinHealth: 0
-  Energy: 100
-  MaxEnergy: 100
+  Energy: 10
+  MaxEnergy: 10
   MinEnergy: 0
   MyManager: {fileID: 585850378456658182, guid: 339693f2cd522444c9406a168eb44aa8, type: 3}
   MyTarget: {fileID: 6855806191119263013, guid: 1ef31a2125f734765844574bff19277d, type: 3}

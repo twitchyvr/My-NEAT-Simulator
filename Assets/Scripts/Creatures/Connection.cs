@@ -119,10 +119,21 @@ public class Connection
         this.isRecurrent = connection.isRecurrent;
     }
 
+    public Connection(int newConnId, int fromNodeId, int toNodeId, float weight)
+    {
+        this.id = newConnId;
+        this.innovationId = -1;
+        this.fromNodeId = fromNodeId;
+        this.toNodeId = toNodeId;
+        this.weight = weight;
+        this.enabled = true;
+        this.isRecurrent = false;
+    }
+
     public Connection(int newConnId, Node fromNode, Node toNode)
     {
         this.id = newConnId;
-        this.innovationId = 0;
+        this.innovationId = -1;
         this.fromNodeId = fromNode.Id;
         this.toNodeId = toNode.Id;
         this.weight = Init();
@@ -133,7 +144,7 @@ public class Connection
     public Connection(int newConnId, int fromNodeId, int toNodeId)
     {
         this.id = newConnId;
-        this.innovationId = 0;
+        this.innovationId = -1;
         this.fromNodeId = fromNodeId;
         this.toNodeId = toNodeId;
         this.weight = Init();

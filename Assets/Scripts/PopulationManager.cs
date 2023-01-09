@@ -48,19 +48,17 @@ public class PopulationManager : MonoBehaviour
     [SerializeField] private int _trialTime = 10;
     [SerializeField] private int _generation = 1;
     [SerializeField] private List<GameObject> _agents = new();
-    [SerializeField] private GameObject _target;
     [SerializeField] private bool _allAgentsDead = false;
     [SerializeField] private float _elapsedSinceLastBest = 0;
     [SerializeField] private float _timeBetweenBest = 5;
     [SerializeField] private int _bestGenome = 0;
-    [SerializeField] private int _bestFitness = 0;
+    [SerializeField] private float _bestFitness = 0;
     [SerializeField] private int _bestTime = 0;
     [SerializeField] private int _bestDistance = 0;
     [SerializeField] private int _bestScore = 0;
     [SerializeField] private int _bestGeneration = 0;
     [SerializeField] private int _bestTrial = 0;
     [SerializeField] private int _bestTrialTime = 0;
-    [SerializeField] private int[] _netLayers = new int[] { 8, 0, 2 };
     public float GenerationFitness = -1f;
     #endregion
 
@@ -74,19 +72,17 @@ public class PopulationManager : MonoBehaviour
     public int TrialTime { get => _trialTime; set => _trialTime = value; }
     public int Generation { get => _generation; set => _generation = value; }
     public List<GameObject> Agents { get => _agents; set => _agents = value; }
-    public GameObject Target { get => _target; set => _target = value; }
     public bool AllAgentsDead { get => _allAgentsDead; set => _allAgentsDead = value; }
     public float ElapsedSinceLastBest { get => _elapsedSinceLastBest; set => _elapsedSinceLastBest = value; }
     public float TimeBetweenBest { get => _timeBetweenBest; set => _timeBetweenBest = value; }
     public int BestGenome { get => _bestGenome; set => _bestGenome = value; }
-    public int BestFitness { get => _bestFitness; set => _bestFitness = value; }
+    public float BestFitness { get => _bestFitness; set => _bestFitness = value; }
     public int BestTime { get => _bestTime; set => _bestTime = value; }
     public int BestDistance { get => _bestDistance; set => _bestDistance = value; }
     public int BestScore { get => _bestScore; set => _bestScore = value; }
     public int BestGeneration { get => _bestGeneration; set => _bestGeneration = value; }
     public int BestTrial { get => _bestTrial; set => _bestTrial = value; }
     public int BestTrialTime { get => _bestTrialTime; set => _bestTrialTime = value; }
-    public int[] NetLayers { get => _netLayers; set => _netLayers = value; }
     public GameObject Instance;
     public GameObject SelectedAgent;
     #endregion
@@ -105,8 +101,7 @@ public class PopulationManager : MonoBehaviour
             agent.name = "Agent " + i;
             agent.GetComponent<HumanAgent>().Init();
             agent.GetComponent<HumanAgent>().MyManager = this;
-            agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork(NetLayers);
-            agent.GetComponent<HumanAgent>().MyTarget = Target;
+            agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork();
             agent.GetComponent<HumanAgent>().MyNumber = i;
             Agents.Add(agent);
         }
@@ -115,6 +110,64 @@ public class PopulationManager : MonoBehaviour
     protected void Update()
     {
         GenerationFitness = CalculateGenerationFitness();
+
+        if (SelectedAgent != null)
+        {
+            Camera.main.transform.position = new Vector3(SelectedAgent.transform.position.x, Camera.main.transform.position.y, SelectedAgent.transform.position.z);
+        }
+
+        if (Agents.Count < PopulationSize)
+        {
+            NewGeneration(PopulationSize - Agents.Count);
+        }
+    }
+
+    private void NewGeneration(int genAmount)
+    {
+        // New generation of agents, with the best from the previous generation being crossed over with the second best
+        // and mutated to create the new generation.
+
+        // Sort the agents by fitness
+        Agents.Sort((x, y) => x.GetComponent<HumanAgent>().BrainFitness.CompareTo(y.GetComponent<HumanAgent>().BrainFitness));
+        Agents.Reverse();
+
+        // Save the best agent
+        if (Agents[0].GetComponent<HumanAgent>().BrainFitness > BestFitness)
+        {
+            BestFitness = Agents[0].GetComponent<HumanAgent>().BrainFitness;
+            BestGeneration = Generation;
+            BestTrial = Agents[0].GetComponent<HumanAgent>().MyNumber;
+            BestGenome = Agents[0].GetComponent<HumanAgent>().MyNumber;
+            Agents[0].GetComponent<HumanAgent>().MyBrain.Save("BestGenome");
+        }
+
+        // Repopulate the agents
+        for (int i = 0; i < genAmount; i++)
+        {
+            // Select the parents
+            NeuralNetwork parent1 = Agents[0].GetComponent<HumanAgent>().MyBrain;
+            NeuralNetwork parent2 = Agents[1].GetComponent<HumanAgent>().MyBrain;
+
+            // Create the child
+            NeuralNetwork child = parent1.Crossover(parent2);
+
+            // Mutate the child
+            child.Mutate();
+
+            // Destroy the old agent
+            Destroy(Agents[i]);
+
+            // Create a new agent
+            Vector3 startingPos = new(this.transform.position.x + Random.Range(-2, 2), 0, this.transform.position.z + Random.Range(-2, 2));
+            GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
+            agent.name = "Agent " + i;
+            agent.GetComponent<HumanAgent>().Init();
+            agent.GetComponent<HumanAgent>().MyManager = this;
+            agent.GetComponent<HumanAgent>().MyBrain = child;
+            agent.GetComponent<HumanAgent>().MyNumber = i;
+            Agents[i] = agent;
+        }
+
     }
 
     public void AgentSelected(GameObject agent)
