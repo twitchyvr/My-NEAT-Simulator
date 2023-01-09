@@ -256,20 +256,24 @@ public class Node
         {
             _value = inputs[_id];
         }
+        else if (_type == NodeType.Bias)
+        {
+            _value = 1;
+        }
         else
         {
             for (int i = 0; i < inputs.Length; i++)
             {
                 _inputSum += _connections[i].ToNodeId == _id ? _connections[i].Weight * inputs[i] : 0;  // If the connection is going to this node, add the weight to the input sum
             }
-            _value = Tanh(_inputSum);
+            _value = Sigmoid(_inputSum);
         }
     }
 
     public void Evaluate()
     {
         // If the node is an input node, return
-        if (_type == NodeType.Input)
+        if (_type == NodeType.Input || _type == NodeType.Bias)
         {
             return;
         }
@@ -292,6 +296,12 @@ public class Node
         }
         _inputSum = 0;
         _outputSum = 0;
+    }
+
+
+    public override string ToString()
+    {
+        return "[" + _id + "] = " + _value + " (" + _type + ")" + " Connections: " + _connections.Count;
     }
     #endregion
 }

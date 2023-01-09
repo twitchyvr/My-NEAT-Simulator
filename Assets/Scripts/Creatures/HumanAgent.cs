@@ -331,7 +331,6 @@ public class HumanAgent : MonoBehaviour, ICreature
             }
         }
 
-
         // Get the outputs
         Dictionary<int, Node> outputs = _neuralNetwork.FeedForward(inputDictionary);
 

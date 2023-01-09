@@ -41,6 +41,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    public Texture NodeTexture;
     public static bool IsPaused = false;
     public GameObject SelectedCreature;
     //    public GameObject CreatureInfoPanel;
@@ -118,10 +119,23 @@ public class GameManager : MonoBehaviour
 
     public void OnGUI()
     {
-        GUI.Label(new Rect(10, 10, 100, 20), $"Creature: {CreatureName}");
-        GUI.Label(new Rect(10, 30, 100, 20), $"Health: {CreatureHealth}");
-        GUI.Label(new Rect(10, 50, 100, 20), $"Age: {CreatureAge}");
-        GUI.Label(new Rect(10, 70, 100, 20), $"Energy: {CreatureEnergy}");
+        GUI.Label(new Rect(10, 10, 300, 20), $"Creature: {CreatureName}");
+        GUI.Label(new Rect(10, 30, 300, 20), $"Health: {CreatureHealth}");
+        GUI.Label(new Rect(10, 50, 300, 20), $"Age: {CreatureAge}");
+        GUI.Label(new Rect(10, 70, 300, 20), $"Energy: {CreatureEnergy}");
+        int nodePos = 90;
+        // Show the selected creature's nodes and connections.
+        if (SelectedCreature != null)
+        {
+            if (SelectedCreature.TryGetComponent(out HumanAgent creature))
+            {
+                foreach (var node in creature.MyBrain.Nodes)
+                {
+                    nodePos += 20;
+                    GUI.Label(new Rect(10, nodePos, 300, 20), $"Node: {node}");
+                }
+            }
+        }
     }
 
     #endregion

@@ -412,6 +412,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca9f47cdf2be242189d75c49e2e57047, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NodeTexture: {fileID: 0}
   SelectedCreature: {fileID: 0}
   FoodPrefab: {fileID: 6855806191119263013, guid: 1ef31a2125f734765844574bff19277d, type: 3}
   FoodSpawnMaxX: 45

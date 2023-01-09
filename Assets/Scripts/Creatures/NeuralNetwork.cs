@@ -43,12 +43,14 @@ public class NeuralNetwork
 {
 
     #region Settable Variables
-
+    public Dictionary<int, Node> Nodes { get { return _nodes; } }
+    public Dictionary<int, Connection> Connections { get { return _connections; } }
     #endregion
 
     #region Private Variables
     private int[] _netLayers;
     private Dictionary<int, Node> _nodes = new();
+    private Dictionary<int, Connection> _connections = new();
     #endregion
 
     #region Properties
@@ -90,6 +92,13 @@ public class NeuralNetwork
             }
         }
 
+        foreach ((int id, Node node) in _nodes)
+        {
+            _connections.Add(id, node.Connections[id]);
+        }
+
+        int tick = 0;
+
         // Create connections from input nodes to output nodes only
         for (int i = 0; i < _netLayers[0]; i++)
         {
@@ -107,8 +116,12 @@ public class NeuralNetwork
                 connId++;
             }
         }
+        Tick(tick++);
+    }
 
-
+    public int Tick(int tick)
+    {
+        return tick;
     }
 
     public NeuralNetwork(int[] netLayers = null)
@@ -177,5 +190,16 @@ public class NeuralNetwork
         }
         return outputValues;
     }
+
+    public override string ToString()
+    {
+        string s = "";
+        for (int i = 0; i < _nodes.Count; i++)
+        {
+            s += _nodes[i].ToString() + "\n";
+        }
+        return s;
+    }
+
     #endregion
 }

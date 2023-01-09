@@ -38,6 +38,8 @@
 //using UnityEngine.Serialization;
 #endregion
 
+using System;
+
 public class Connection
 {
 
@@ -178,14 +180,7 @@ public class Connection
 
     public override string ToString()
     {
-        return
-            "Id: " + id + ", " +
-            "InnovationId: " + innovationId + ", " +
-            "FromNodeId: " + fromNodeId + ", " +
-            "ToNodeId: " + toNodeId + ", " +
-            "Weight: " + weight + ", " +
-            "Enabled: " + enabled + ", " +
-            "IsRecurrent: " + isRecurrent;
+        return "" + id + ": " + fromNodeId + " -> " + ToNodeId;
     }
     #endregion
 }
