@@ -92,9 +92,12 @@ public class NeuralNetwork
             }
         }
 
-        foreach ((int id, Node node) in _nodes)
+        foreach ((int thisNodeId, Node thisNode) in _nodes)
         {
-            _connections.Add(id, node.Connections[id]);
+            foreach ((int thisConnId, Connection thisConnection) in thisNode.Connections)
+            {
+                _connections.Add(thisConnId, thisConnection);
+            }
         }
 
         int tick = 0;

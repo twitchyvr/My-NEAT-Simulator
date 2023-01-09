@@ -243,10 +243,9 @@ public class HumanAgent : MonoBehaviour, ICreature
     {
         // Update time since birth
         _timeSinceBirth = Time.time - _birthTime;
-        float timeSinceLastUpdate = Time.time - _lastUpdateTime;
 
         // Add age based on seconds lived
-        AddAge(timeSinceLastUpdate);
+        AddAge(Time.deltaTime);
 
         // Remove energy based on seconds lived (1 energy per second)
         SubtractEnergy(Time.deltaTime);
@@ -261,7 +260,6 @@ public class HumanAgent : MonoBehaviour, ICreature
         }
         Dictionary<int, Node> outputs = ProcessInputs();
         Move(outputs[0].Value, outputs[1].Value);
-
 
         _lastUpdateTime = Time.time;
     }
@@ -332,6 +330,10 @@ public class HumanAgent : MonoBehaviour, ICreature
         }
 
         // Get the outputs
+        if (_neuralNetwork == null)
+        {
+            Init();
+        }
         Dictionary<int, Node> outputs = _neuralNetwork.FeedForward(inputDictionary);
 
         // Process the outputs

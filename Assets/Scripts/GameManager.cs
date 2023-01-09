@@ -120,19 +120,22 @@ public class GameManager : MonoBehaviour
     public void OnGUI()
     {
         GUI.Label(new Rect(10, 10, 300, 20), $"Creature: {CreatureName}");
-        GUI.Label(new Rect(10, 30, 300, 20), $"Health: {CreatureHealth}");
-        GUI.Label(new Rect(10, 50, 300, 20), $"Age: {CreatureAge}");
-        GUI.Label(new Rect(10, 70, 300, 20), $"Energy: {CreatureEnergy}");
-        int nodePos = 90;
+        GUI.Label(new Rect(10, 25, 300, 20), $"Health: {CreatureHealth}");
+        GUI.Label(new Rect(10, 40, 300, 20), $"Age: {CreatureAge}");
+        GUI.Label(new Rect(10, 55, 300, 20), $"Energy: {CreatureEnergy}");
+        int nodePos = 70;
         // Show the selected creature's nodes and connections.
         if (SelectedCreature != null)
         {
             if (SelectedCreature.TryGetComponent(out HumanAgent creature))
             {
-                foreach (var node in creature.MyBrain.Nodes)
+                foreach ((int currentNodeId, Node currentNode) in creature.MyBrain.Nodes)
                 {
-                    nodePos += 20;
-                    GUI.Label(new Rect(10, nodePos, 300, 20), $"Node: {node}");
+                    foreach ((int currentConnId, Connection currentConnection) in currentNode.Connections)
+                    {
+                        GUI.Label(new Rect(10, nodePos, 300, 20), $"Node: {currentNode.Id} - Connection: {currentConnection.Id} - Weight: {currentConnection.Weight}");
+                        nodePos += 15;
+                    }
                 }
             }
         }
