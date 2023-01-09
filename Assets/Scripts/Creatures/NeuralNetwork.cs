@@ -28,6 +28,7 @@
 //using System;
 //using System.Linq;
 //using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -40,7 +41,7 @@ using UnityEngine;
 //using UnityEngine.Serialization;
 #endregion
 
-public class NeuralNetwork
+public class NeuralNetwork : IComparable<NeuralNetwork>
 {
 
     #region Settable Variables
@@ -52,12 +53,20 @@ public class NeuralNetwork
     private int[] _netLayers;
     private Dictionary<int, Node> _nodes = new();
     private Dictionary<int, Connection> _connections = new();
+    private float _fitness;
     #endregion
 
     #region Properties
     public int[] NetLayers { get { return _netLayers; } }
-
     public float Fitness { get; internal set; }
+    public int CompareTo(NeuralNetwork other)
+    {
+        if (other == null) return 1;
+        if (Fitness > other.Fitness) return 1;
+        if (Fitness < other.Fitness) return -1;
+        return 0;
+    }
+
     #endregion
 
     #region Methods

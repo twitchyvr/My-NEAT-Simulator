@@ -47,7 +47,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     [SerializeField] Camera _cam;
     [Range(-1f, 1f)] public float AgentMoveAcceleration = 0f;
     [Range(-1f, 1f)] public float AgentTurnTorque = 0f;
-    [SerializeField] private int[] _neuralNetworkLayers = new int[] { 9, 0, 4 };
+    [SerializeField] private int[] _neuralNetworkLayers = new int[] { 10, 0, 4 };
     [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
     [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
     [SerializeField][Range(0.0001f, 1f)] private float _inputBias = 0.25f;
@@ -97,6 +97,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     float ICreature.MaxHealth { get { return MaxHealth; } set { MaxHealth = value; } }
     float ICreature.MaxEnergy { get { return MaxEnergy; } set { MaxEnergy = value; } }
     float ICreature.MinEnergy { get { return MinEnergy; } set { MinEnergy = value; } }
+
     PopulationManager ICreature.MyManager { get { return MyManager; } set { MyManager = value; } }
     #endregion
 
@@ -268,6 +269,7 @@ public class HumanAgent : MonoBehaviour, ICreature
 
         Dictionary<int, Node> outputs = ProcessInputs();
         BrainFitness = (outputs[0].Value + outputs[1].Value) / MyBrain.Nodes.Count;
+        MyBrain.Fitness = BrainFitness;
 
         AgentMoveAcceleration = outputs[0].Value;
         AgentTurnTorque = outputs[1].Value;
@@ -329,13 +331,17 @@ public class HumanAgent : MonoBehaviour, ICreature
         inputs[5] = GetEnergy;              // energy sensor
         inputs[6] = GetHealth;              // health sensor
         inputs[7] = GetAge;                 // age sensor
-        inputs[8] = _inputBias;             // bias
+        inputs[8] = BrainFitness;           // brain fitness sensor
+        inputs[9] = _inputBias;             // bias
 
         Vector3 forward = _transform.forward;
         Vector3 right = _transform.right;
         Vector3 left = -_transform.right;
         Vector3 forwardRight = forward + right;
         Vector3 forwardLeft = forward + left;
+
+        // Adjust the raycast so it is angled slightly down toward the ground
+        forward.y = -0.2f;
 
         // Raycast to find the closest food using input[2]
         if (Physics.Raycast(_transform.position, forward, out RaycastHit hit, MaxFoodDistance))
@@ -393,7 +399,6 @@ public class HumanAgent : MonoBehaviour, ICreature
         {
             outputArray[i] = outputs[i].Value;
         }
-
         return outputs;
     }
 
