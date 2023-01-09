@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8657145587769928582}
   - component: {fileID: 9133310285387242539}
   - component: {fileID: 3851512101960551722}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Left Eye
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -94,7 +94,7 @@ GameObject:
   - component: {fileID: 3270516706576441046}
   - component: {fileID: 5047978125298709454}
   - component: {fileID: 2604245541813819257}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -178,7 +178,7 @@ GameObject:
   - component: {fileID: 2555171679741477103}
   - component: {fileID: 4326694560431157263}
   - component: {fileID: 7727344414254979389}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Face
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -263,7 +263,7 @@ GameObject:
   - component: {fileID: 4284897310694499112}
   - component: {fileID: 7290438472792407218}
   - component: {fileID: 2327982310181237009}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Feet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -346,7 +346,7 @@ GameObject:
   - component: {fileID: 8113046150609331699}
   - component: {fileID: 1217710406457217060}
   - component: {fileID: 8274044764252403892}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Pants
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -430,7 +430,7 @@ GameObject:
   - component: {fileID: 720678769200704669}
   - component: {fileID: 5665963261158910650}
   - component: {fileID: 3679635250859227293}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: AI Guy
   m_TagString: Creature
   m_Icon: {fileID: 0}
@@ -498,9 +498,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cam: {fileID: 0}
+  AgentMoveAcceleration: 0
+  AgentTurnTorque: 0
   _neuralNetworkLayers: 080000000000000002000000
   _moveMultiplier: 50
   _turnMultiplier: 500
+  _inputBias: 0.25
+  MaxFoodDistance: 3
+  BrainFitness: 0
   Age: 0
   MaxAge: 1000
   Health: 100
@@ -512,6 +517,7 @@ MonoBehaviour:
   MyManager: {fileID: 585850378456658182, guid: 339693f2cd522444c9406a168eb44aa8, type: 3}
   MyTarget: {fileID: 6855806191119263013, guid: 1ef31a2125f734765844574bff19277d, type: 3}
   MyNumber: 0
+  isDead: 0
 --- !u!1 &8475881276201003862
 GameObject:
   m_ObjectHideFlags: 0
@@ -523,7 +529,7 @@ GameObject:
   - component: {fileID: 4379472127808091029}
   - component: {fileID: 1686490543572665687}
   - component: {fileID: 4783418333408738147}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Right Eye
   m_TagString: Untagged
   m_Icon: {fileID: 0}

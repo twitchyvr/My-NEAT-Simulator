@@ -54,16 +54,6 @@ public class GameManager : MonoBehaviour
     float CreatureEnergy = 0f;
     string CreatureName = "";
 
-
-    #region Settable Variables
-    #endregion
-
-    #region Private Variables
-    #endregion
-
-    #region Properties
-    #endregion
-
     #region Init
     protected void Awake()
     {

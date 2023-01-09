@@ -51,6 +51,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
     [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
     [SerializeField][Range(0.0001f, 1f)] private float _inputBias = 0.25f;
+    public float MaxFoodDistance = 3f;
     public float BrainFitness = 0f;
     public float Age = 0;
     public float MaxAge = 100f;
@@ -321,12 +322,27 @@ public class HumanAgent : MonoBehaviour, ICreature
         float[] inputs = new float[_neuralNetworkLayers[0]];
         inputs[0] = _transform.position.x;
         inputs[1] = _transform.position.z;
-        inputs[2] = 0;
+        inputs[2] = 0;  // food sensor
         inputs[3] = 0;
         inputs[4] = 0;
         inputs[5] = 0;
         inputs[6] = 0;
         inputs[7] = _inputBias;
+
+        // Raycast to find the closest food
+        RaycastHit hit;
+
+        if (Physics.Raycast(_transform.position, _transform.forward, out hit, MaxFoodDistance))
+        {
+            if (hit.collider.gameObject.CompareTag("Food"))
+            {
+                inputs[2] = hit.distance / MaxFoodDistance;
+            }
+            if (hit.collider.gameObject.CompareTag("Wall"))
+            {
+                inputs[3] = hit.distance / MaxFoodDistance;
+            }
+        }
 
         // Store the inputs in a dictionary
         Dictionary<int, Node> inputDictionary = new();
