@@ -45,6 +45,8 @@ public class HumanAgent : MonoBehaviour, ICreature
 {
     #region Settable Variables
     [SerializeField] Camera _cam;
+    [Range(-1f, 1f)] public float AgentMoveAcceleration = 0f;
+    [Range(-1f, 1f)] public float AgentTurnTorque = 0f;
     [SerializeField] private int[] _neuralNetworkLayers = new int[] { 8, 0, 4 };
     [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
     [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
@@ -73,6 +75,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     #endregion
 
     #region Properties
+    public bool isDead = false;
     public float GetAge { get { return Age; } }
     public float GetEnergy { get { return Energy; } }
     public float GetHealth { get { return Health; } }
@@ -241,6 +244,7 @@ public class HumanAgent : MonoBehaviour, ICreature
 
     public void CreatureUpdate()
     {
+        if (isDead) return;
         // Update time since birth
         _timeSinceBirth = Time.time - _birthTime;
 
@@ -258,14 +262,19 @@ public class HumanAgent : MonoBehaviour, ICreature
         {
             Death();
         }
+
         Dictionary<int, Node> outputs = ProcessInputs();
-        Move(outputs[0].Value, outputs[1].Value);
+        AgentMoveAcceleration = outputs[0].Value;
+        AgentTurnTorque = outputs[1].Value;
+        Move(AgentMoveAcceleration, AgentTurnTorque);
 
         _lastUpdateTime = Time.time;
     }
 
     void Death(int reason = 0)
     {
+        if (isDead) return;
+        isDead = true;
         string myName = this.name;
         switch (reason)
         {
@@ -291,6 +300,7 @@ public class HumanAgent : MonoBehaviour, ICreature
 
     void OnTriggerStay(Collider other)
     {
+        if (isDead) return;
         if (other.gameObject.CompareTag("Food"))
         {
             AddEnergy(other.gameObject.TryGetComponent<PlantCreature>(out PlantCreature plant) ? plant.FoodEnergySupplied : 0); // If the object has a plant component, use that, otherwise use 0.

@@ -42,18 +42,14 @@ using System;
 
 public class Connection
 {
-
-    #region Settable Variables
-    private int id = 0;
-    private int innovationId = 0;
-    private int fromNodeId = 0;
-    private int toNodeId = 0;
-    private float weight = 0f;
+    #region Private Variables
+    private int id = -1;
+    private int innovationId = -1;
+    private int fromNodeId = -1;
+    private int toNodeId = -1;
+    private float weight = -1f;
     private bool enabled = true;
     private bool isRecurrent = false;
-    #endregion
-
-    #region Private Variables
     #endregion
 
     #region Properties
@@ -129,7 +125,7 @@ public class Connection
         this.innovationId = 0;
         this.fromNodeId = fromNode.Id;
         this.toNodeId = toNode.Id;
-        this.weight = 0f;
+        this.weight = Init();
         this.enabled = true;
         this.isRecurrent = false;
     }
@@ -140,7 +136,7 @@ public class Connection
         this.innovationId = 0;
         this.fromNodeId = fromNodeId;
         this.toNodeId = toNodeId;
-        this.weight = 0f;
+        this.weight = Init();
         this.enabled = true;
         this.isRecurrent = false;
     }
@@ -162,7 +158,7 @@ public class Connection
         this.innovationId = innovationId;
         this.fromNodeId = fromNodeId;
         this.toNodeId = toNodeId;
-        this.weight = 0f;
+        this.weight = Init();
         this.enabled = true;
         this.isRecurrent = false;
     }
@@ -173,14 +169,19 @@ public class Connection
         this.innovationId = innovationId;
         this.fromNodeId = fromNodeId;
         this.toNodeId = toNodeId;
-        this.weight = 0f;
+        this.weight = Init();
         this.enabled = true;
         this.isRecurrent = isConnRecurrent;
     }
 
     public override string ToString()
     {
-        return "" + id + ": " + fromNodeId + " -> " + ToNodeId;
+        return "[" + id + "] = " + fromNodeId + " -> " + ToNodeId + " : " + weight;
+    }
+
+    public float Init()
+    {
+        return Weight = UnityEngine.Random.Range(-1f, 1f);
     }
     #endregion
 }

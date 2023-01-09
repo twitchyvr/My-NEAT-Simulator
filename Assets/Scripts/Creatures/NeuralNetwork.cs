@@ -86,6 +86,11 @@ public class NeuralNetwork
                     type = Node.NodeType.Output;
 
                 Node node = new(nodeId, type, i);
+                node.Init();
+                foreach ((int connectionId, Connection connectionItem) in node.Connections)
+                {
+                    connectionItem.Init();
+                }
                 if (type != Node.NodeType.Input) node.Init();
                 _nodes.Add(nodeId, node);
                 nodeId++;

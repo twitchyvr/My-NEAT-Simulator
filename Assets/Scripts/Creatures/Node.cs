@@ -26,9 +26,9 @@
  */
 #region Usings
 using System;
-//using System.Linq;
 //using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 //using UnityEngine;
 //using UnityEngine.AI;
 //using UnityEngine.UI;
@@ -43,7 +43,7 @@ public class Node
 
     #region Private Variables
     private int _id = 0;
-    private float _value = 0;  // The value of this node
+    private float _value = -1;  // The value of this node
     private Dictionary<int, Connection> _connections;
 
     private NodeType _type;
@@ -154,7 +154,6 @@ public class Node
         _id = id;
         _type = type;
         _nodeLayer = nodeLayer;
-        _value = 0;
         _inputSum = 0;
         _outputSum = 0;
         _value = 0;
@@ -167,16 +166,16 @@ public class Node
         _type = type;
         _nodeLayer = nodeLayer;
         _connections = connections;
-        _value = 0;
         _inputSum = 0;
         _outputSum = 0;
+
         for (int i = 0; i < connections.Count; i++)
         {
             _connections.Add(connections[i].Id, connections[i]);
         }
         for (int i = 0; i < connections.Count; i++)
         {
-            _inputSum += connections[i].ToNodeId == id ? connections[i].Weight : 0;  // If the connection is going to this node, add the weight to the input sum
+            _inputSum += connections[i].ToNodeId == id ? connections[i].Weight : 0;  // If the connection is going to this node, add the weight to the input sum or else add 0
             _outputSum += connections[i].FromNodeId == id ? connections[i].Weight : 0;  // If the connection is coming from this node, add the weight to the output sum
         }
         _value = Tanh(_inputSum);
@@ -201,6 +200,11 @@ public class Node
         _connections.Remove(connection.Id);
     }
 
+    public void RemoveConnection(int connectionId)
+    {
+        _connections.Remove(connectionId);
+    }
+
     public void RemoveAllConnections()
     {
         _connections.Clear();
@@ -213,7 +217,7 @@ public class Node
             return;
         }
 
-        _value = Sigmoid(_inputSum);
+        _value = Tanh(_inputSum);
     }
 
     public float Sigmoid(float x)
@@ -258,7 +262,10 @@ public class Node
         }
         else if (_type == NodeType.Bias)
         {
-            _value = 1;
+            if (inputs[_id] != 0)
+                _value = inputs[_id];
+            else
+                _value = 0.25f;
         }
 
         for (int i = 0; i < _connections.Count; i++)
@@ -275,7 +282,6 @@ public class Node
                 }
             }
         }
-        _value = Tanh(_inputSum);
     }
 
     public void Evaluate()
@@ -313,8 +319,13 @@ public class Node
         {
             _value = value;
         }
-        _inputSum = 0;
-        _outputSum = 0;
+        for (int i = 0; i < _connections.Count; i++)
+        {
+            _connections[i].Init();
+        }
+        // Calculate the input sum by adding the weights of all the connections that are going to this node
+        _inputSum = _connections != null ? _connections.Sum(x => x.Value.ToNodeId == _id ? x.Value.Weight : 0) : 0;
+        _outputSum = _connections != null ? _connections.Sum(x => x.Value.FromNodeId == _id ? x.Value.Weight : 0) : 0;
     }
 
 
