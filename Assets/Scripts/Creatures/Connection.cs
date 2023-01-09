@@ -183,5 +183,52 @@ public class Connection
     {
         return Weight = UnityEngine.Random.Range(-1f, 1f);
     }
+
+    public void Mutate()
+    {
+        float rand = UnityEngine.Random.Range(0f, 1f);
+        if (rand < 0.1f)
+        {
+            weight = UnityEngine.Random.Range(-1f, 1f);
+        }
+        else
+        {
+            weight += UnityEngine.Random.Range(-0.1f, 0.1f);
+        }
+    }
+
+    internal void Copy(Connection connection)
+    {
+        // Create a copy of the connection
+        this.innovationId = connection.innovationId;
+        this.fromNodeId = connection.fromNodeId;
+        this.toNodeId = connection.toNodeId;
+        this.weight = connection.weight;
+        this.enabled = connection.enabled;
+        this.isRecurrent = connection.isRecurrent;
+    }
+
+    internal void Crossover(Connection otherConnection)
+    {
+        // Crossover the connection with the other connection
+        // using the other connection's weight
+
+        // If the other connection is disabled, disable this connection
+        if (!otherConnection.enabled)
+        {
+            this.enabled = false;
+        }
+
+        // If the other connection is recurrent, make this connection recurrent
+        if (otherConnection.isRecurrent)
+        {
+            this.isRecurrent = true;
+        }
+
+        // Crossover the weight
+        this.weight = otherConnection.weight;
+
+    }
+
     #endregion
 }

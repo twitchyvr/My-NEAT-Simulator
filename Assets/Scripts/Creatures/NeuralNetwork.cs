@@ -29,8 +29,9 @@
 //using System.Linq;
 //using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-//using UnityEngine;
+using UnityEngine;
 //using UnityEngine.AI;
 //using UnityEngine.UI;
 //using UnityEngine.Events;
@@ -55,6 +56,8 @@ public class NeuralNetwork
 
     #region Properties
     public int[] NetLayers { get { return _netLayers; } }
+
+    public float Fitness { get; internal set; }
     #endregion
 
     #region Methods
@@ -91,7 +94,7 @@ public class NeuralNetwork
                 {
                     connectionItem.Init();
                 }
-                if (type != Node.NodeType.Input) node.Init();
+                if (type != Node.NodeType.Input && type != Node.NodeType.Bias) node.Init();
                 _nodes.Add(nodeId, node);
                 nodeId++;
             }
@@ -172,7 +175,19 @@ public class NeuralNetwork
         // Evaluate network
         for (int i = 0; i < _nodes.Count; i++)
         {
-            _nodes[i].Evaluate();
+            EvaluateNode(_nodes[i]);
+        }
+    }
+
+    public void EvaluateNode(Node node)
+    {
+        foreach ((int connectionId, Connection connectionItem) in node.Connections)
+        {
+            if (connectionItem.Enabled)
+            {
+                _nodes[connectionItem.ToNodeId].Value += connectionItem.Weight * node.Value;
+            }
+            _nodes[connectionItem.ToNodeId].Value = System.MathF.Tanh(_nodes[connectionItem.ToNodeId].Value);
         }
     }
 
@@ -187,7 +202,7 @@ public class NeuralNetwork
         // Evaluate network
         for (int i = 0; i < _nodes.Count; i++)
         {
-            _nodes[i].Evaluate();
+            EvaluateNode(_nodes[i]);
         }
 
         // Return output values
@@ -209,5 +224,95 @@ public class NeuralNetwork
         return s;
     }
 
+    public void Mutate()
+    {
+        // Mutate weights
+        foreach ((int connectionId, Connection connectionItem) in _connections)
+        {
+            connectionItem.Mutate();
+        }
+
+        // Mutate nodes
+        foreach ((int nodeId, Node nodeItem) in _nodes)
+        {
+            nodeItem.Mutate();
+        }
+    }
+
+    public void Crossover(NeuralNetwork otherParent)
+    {
+        // Crossover weights
+        foreach ((int connectionId, Connection connectionItem) in _connections)
+        {
+            connectionItem.Crossover(otherParent._connections[connectionId]);
+        }
+
+        // Crossover nodes
+        foreach ((int nodeId, Node nodeItem) in _nodes)
+        {
+            nodeItem.Crossover(otherParent._nodes[nodeId]);
+        }
+    }
+
+    public void Copy(NeuralNetwork otherParent)
+    {
+        // Copy weights
+        foreach ((int connectionId, Connection connectionItem) in _connections)
+        {
+            int copyId = _connections.Count + 1;
+            connectionItem.Copy(otherParent._connections[connectionId]);
+            connectionItem.InnovationId = copyId;
+        }
+
+        // Copy nodes
+        foreach ((int nodeId, Node nodeItem) in _nodes)
+        {
+            int copyId = _nodes.Count + 1;
+            nodeItem.Copy(otherParent._nodes[nodeId]);
+            nodeItem.Id = copyId;
+        }
+    }
+
+    public void Reset()
+    {
+        foreach ((int nodeId, Node nodeItem) in _nodes)
+        {
+            nodeItem.Reset();
+        }
+    }
+
+    public void Save(string path)
+    {
+        string json = JsonUtility.ToJson(this);
+        File.WriteAllText(path, json);
+    }
+
+    public static NeuralNetwork Load(string path)
+    {
+        string json = File.ReadAllText(path);
+        return JsonUtility.FromJson<NeuralNetwork>(json);
+    }
+
+    public void SaveAsAsset(string path)
+    {
+        string json = JsonUtility.ToJson(this);
+        File.WriteAllText(path, json);
+    }
+
+    public static NeuralNetwork LoadFromAsset(string path)
+    {
+        string json = File.ReadAllText(path);
+        return JsonUtility.FromJson<NeuralNetwork>(json);
+    }
+
+    public void CalculateNetworkFitness()
+    {
+        float fitness = 0;
+        foreach ((int nodeId, Node nodeItem) in _nodes)
+        {
+            fitness += nodeItem.CalculateNodeFitness(); // Calculate node fitness by comparing node value to desired value
+        }
+        Fitness = fitness;
+    }
     #endregion
 }

@@ -54,6 +54,7 @@ public class GameManager : MonoBehaviour
     float CreatureEnergy = 0f;
     string CreatureName = "";
 
+
     #region Settable Variables
     #endregion
 
@@ -106,7 +107,9 @@ public class GameManager : MonoBehaviour
                 {
                     // When the object is clicked, output this to the console
                     Debug.Log("You selected the " + hit.collider.gameObject.name); // ensure you picked right object
+
                     SelectedCreature = hit.collider.gameObject;
+                    if (SelectedCreature == null) return;
                     SelectedCreature.GetComponent<HumanAgent>().MyManager.AgentSelected(SelectedCreature); // Effectively this makes the selected agent the only one that can move.
                     CreatureName = hit.collider.gameObject.name;
                     CreatureHealth = creature.Health;
@@ -123,7 +126,7 @@ public class GameManager : MonoBehaviour
         GUI.Label(new Rect(10, 25, 300, 20), $"Health: {CreatureHealth}");
         GUI.Label(new Rect(10, 40, 300, 20), $"Age: {CreatureAge}");
         GUI.Label(new Rect(10, 55, 300, 20), $"Energy: {CreatureEnergy}");
-        int nodePos = 70;
+        int nodePos = 85;
         int connPos = 10;
         // Show the selected creature's nodes and connections.
         if (SelectedCreature != null)

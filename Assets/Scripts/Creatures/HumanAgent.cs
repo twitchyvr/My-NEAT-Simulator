@@ -51,6 +51,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
     [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
     [SerializeField][Range(0.0001f, 1f)] private float _inputBias = 0.25f;
+    public float BrainFitness = 0f;
     public float Age = 0;
     public float MaxAge = 100f;
     public float Health = 100f;
@@ -264,6 +265,8 @@ public class HumanAgent : MonoBehaviour, ICreature
         }
 
         Dictionary<int, Node> outputs = ProcessInputs();
+        BrainFitness = (outputs[0].Value + outputs[1].Value) / MyBrain.Nodes.Count;
+
         AgentMoveAcceleration = outputs[0].Value;
         AgentTurnTorque = outputs[1].Value;
         Move(AgentMoveAcceleration, AgentTurnTorque);

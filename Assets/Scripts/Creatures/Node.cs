@@ -284,31 +284,6 @@ public class Node
         }
     }
 
-    public void Evaluate()
-    {
-        // If the node is an input node, return
-        if (_type == NodeType.Input || _type == NodeType.Bias)
-        {
-            return;
-        }
-
-        for (int i = 0; i < _connections.Count; i++)
-        {
-            if (_connections.TryGetValue(i, out Connection connection))
-            {
-                if (connection.ToNodeId == _id && connection.FromNodeId != _id)
-                {
-                    _inputSum += connection.Weight;
-                }
-                if (connection.FromNodeId == _id && connection.ToNodeId != _id)
-                {
-                    _outputSum += connection.Weight;
-                }
-            }
-        }
-        _value = Tanh(_inputSum);
-    }
-
     public void Init(float value = -1)
     {
         if (value == -1)
@@ -333,5 +308,58 @@ public class Node
     {
         return "[" + _id + "] = " + _value + " (" + _type + ")" + " Connections: " + _connections.Count;
     }
+
+    internal void Mutate()
+    {
+        throw new NotImplementedException();
+    }
+
+    internal void Reset()
+    {
+        // Reset the node values
+        _value = 0;
+    }
+
+    internal void Copy(Node node)
+    {
+        // Create a copy of the node
+        _value = node.Value;
+        _type = node.Type;
+        _inputSum = node.InputSum;
+        _outputSum = node.OutputSum;
+        _nodeLayer = node.NodeLayer;
+        _connections = new Dictionary<int, Connection>();
+        for (int i = 0; i < node.Connections.Count; i++)
+        {
+            _connections.Add(node.Connections[i].Id, node.Connections[i]);
+        }
+    }
+
+    internal void Crossover(Node node)
+    {
+        // Create a crossover of the node
+        _value = node.Value;
+        _type = node.Type;
+        _inputSum = node.InputSum;
+        _outputSum = node.OutputSum;
+        _nodeLayer = node.NodeLayer;
+        _connections = new Dictionary<int, Connection>();
+        for (int i = 0; i < node.Connections.Count; i++)
+        {
+            _connections.Add(node.Connections[i].Id, node.Connections[i]);
+        }
+    }
+
+    internal float CalculateNodeFitness()
+    {
+        // Calculate the fitness of the node
+        float fitness = 0;
+        for (int i = 0; i < _connections.Count; i++)
+        {
+            fitness += _connections[i].Weight;
+        }
+        return fitness;
+    }
+
     #endregion
 }

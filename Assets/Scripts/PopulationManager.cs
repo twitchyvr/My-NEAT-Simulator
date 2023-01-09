@@ -61,6 +61,7 @@ public class PopulationManager : MonoBehaviour
     [SerializeField] private int _bestTrial = 0;
     [SerializeField] private int _bestTrialTime = 0;
     [SerializeField] private int[] _netLayers = new int[] { 8, 0, 2 };
+    public float GenerationFitness = -1f;
     #endregion
 
     #region Private Variables
@@ -111,28 +112,25 @@ public class PopulationManager : MonoBehaviour
         }
     }
 
+    protected void Update()
+    {
+        GenerationFitness = CalculateGenerationFitness();
+    }
+
     public void AgentSelected(GameObject agent)
     {
         SelectedAgent = agent;
-        // make the selected agent the only one that can move
-        foreach (GameObject a in Agents)
-        {
-            if (a != agent)
-            {
-                a.GetComponent<HumanAgent>().enabled = false;
-            }
-            else
-            {
-                a.GetComponent<HumanAgent>().enabled = true;
-            }
-        }
     }
 
-    #endregion
-    #region Loop
-    // Loop methods here
-    #endregion
-    #region Methods
-    // Your custom methods go here
+    public float CalculateGenerationFitness()
+    {
+        float total = 0;
+        foreach (GameObject agent in Agents)
+        {
+            if (agent != null)
+                total += agent.GetComponent<HumanAgent>().BrainFitness;
+        }
+        return total / Agents.Count;
+    }
     #endregion
 }
