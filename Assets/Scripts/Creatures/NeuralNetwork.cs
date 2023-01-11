@@ -41,6 +41,7 @@ using UnityEngine;
 //using UnityEngine.Serialization;
 #endregion
 
+[Serializable]
 public class NeuralNetwork : IComparable<NeuralNetwork>
 {
 
@@ -69,6 +70,15 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     #endregion
 
+    #region Constructors
+    public NeuralNetwork(int[] netLayers = null)
+    {
+        // Init with the first and last layers
+        Init(netLayers[0], netLayers[^1]);
+    }
+
+    #endregion
+
     #region Methods
     public void Init(int inputNodesCount, int outputNodesCount)
     {
@@ -85,6 +95,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
         // Add an additional input node for bias
         Node biasNode = new(nodeId, Node.NodeType.Bias);
+        _nodes.Add(nodeId, biasNode);
         nodeId++;
 
         // Create output nodes
@@ -95,38 +106,23 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
             nodeId++;
         }
 
+        // Loop through all nodes and create connections
         foreach ((int thisNodeId, Node thisNode) in _nodes)
         {
-            foreach ((int thisConnId, Connection thisConnection) in thisNode.Connections)
+            // If the node is an input or bias node, connect it to all output nodes
+            if (thisNode.Type == Node.NodeType.Input || thisNode.Type == Node.NodeType.Bias)
             {
-                _connections.Add(thisConnId, thisConnection);
+                foreach ((int otherNodeId, Node otherNode) in _nodes)
+                {
+                    if (otherNode.Type == Node.NodeType.Output)
+                    {
+                        Connection connection = new(connId, thisNodeId, otherNodeId);
+                        _connections.Add(connId, connection);
+                        connId++;
+                    }
+                }
             }
         }
-
-        int tick = 0;
-        Tick(tick++);
-    }
-
-    public int Tick(int tick)
-    {
-        return tick;
-    }
-
-    public NeuralNetwork(int[] netLayers = null)
-    {
-        Init(netLayers[0], netLayers[^1]);
-    }
-
-    public void SetInputValues(float[] inputValues)
-    {
-
-    }
-
-    public float[] GetOutputValues()
-    {
-        float[] outputValues = new float[] { };
-
-        return outputValues;
     }
 
     public void EvaluateInput(Dictionary<int, Node> inputValues, Dictionary<int, Node> desiredOutputValues)

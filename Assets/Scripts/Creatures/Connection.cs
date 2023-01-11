@@ -40,6 +40,7 @@
 
 using System;
 
+[Serializable]
 public class Connection
 {
     #region Private Variables

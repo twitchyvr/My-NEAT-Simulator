@@ -38,6 +38,7 @@ using System.Linq;
 //using UnityEngine.Serialization;
 #endregion
 
+[Serializable]
 public class Node
 {
 
