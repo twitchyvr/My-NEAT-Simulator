@@ -50,14 +50,14 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     #endregion
 
     #region Private Variables
-    private int[] _netLayers;
+    //    private int[] _netLayers;
     private Dictionary<int, Node> _nodes = new();
     private Dictionary<int, Connection> _connections = new();
     private float _fitness;
     #endregion
 
     #region Properties
-    public int[] NetLayers { get { return _netLayers; } }
+    //    public int[] NetLayers { get { return _netLayers; } }
     public float Fitness { get; internal set; }
     public int CompareTo(NeuralNetwork other)
     {
@@ -70,43 +70,29 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     #endregion
 
     #region Methods
-    public void Init(int[] netLayers = null)
+    public void Init(int inputNodesCount, int outputNodesCount)
     {
-        if (netLayers != null)
-            _netLayers = netLayers;
-        else
-            _netLayers = new int[3] { 8, 0, 2 };
-
         int nodeId = 0;
         int connId = 0;
 
-        // Create nodes for each layer
-        for (int i = 0; i < _netLayers.Length; i++)
+        // Create input nodes
+        for (int i = 0; i < inputNodesCount; i++)
         {
-            for (int j = 0; j < _netLayers[i]; j++)
-            {
-                float netlayerszero = _netLayers[0] - 1;
-                Node.NodeType type = Node.NodeType.Hidden;
-                if (i == 0 && j != netlayerszero)
-                    type = Node.NodeType.Input;
-                else if (i > 0 && i < _netLayers.Length - 1)
-                    type = Node.NodeType.Hidden;
-                if (i == 0 && j == netlayerszero)
-                    // Make the last node in the input layer a bias node by default
-                    type = Node.NodeType.Bias;
-                else if (i == _netLayers.Length - 1)
-                    type = Node.NodeType.Output;
+            Node node = new(nodeId, Node.NodeType.Input);
+            _nodes.Add(nodeId, node);
+            nodeId++;
+        }
 
-                Node node = new(nodeId, type, i);
-                node.Init();
-                foreach ((int connectionId, Connection connectionItem) in node.Connections)
-                {
-                    connectionItem.Init();
-                }
-                if (type != Node.NodeType.Input && type != Node.NodeType.Bias) node.Init();
-                _nodes.Add(nodeId, node);
-                nodeId++;
-            }
+        // Add an additional input node for bias
+        Node biasNode = new(nodeId, Node.NodeType.Bias);
+        nodeId++;
+
+        // Create output nodes
+        for (int i = 0; i < outputNodesCount; i++)
+        {
+            Node node = new(nodeId, Node.NodeType.Output);
+            _nodes.Add(nodeId, node);
+            nodeId++;
         }
 
         foreach ((int thisNodeId, Node thisNode) in _nodes)
@@ -118,24 +104,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         }
 
         int tick = 0;
-
-        // Create connections from input nodes to output nodes only
-        for (int i = 0; i < _netLayers[0]; i++)
-        {
-            for (int j = 0; j < _netLayers[^1]; j++)
-            {
-                Connection conn = new(connId, _nodes[i], _nodes[_nodes.Count - _netLayers[^1] + j])
-                {
-                    Weight = (UnityEngine.Random.Range(-1f, 1f) * _nodes[_nodes.Count - _netLayers[0]].Value),
-                    Enabled = true,
-                    IsRecurrent = false,
-                    InnovationId = connId
-                };
-                _nodes[i].AddConnection(conn);
-                _nodes[_nodes.Count - _netLayers[^1] + j].AddConnection(conn); // Add connection to output node
-                connId++;
-            }
-        }
         Tick(tick++);
     }
 
@@ -146,40 +114,24 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public NeuralNetwork(int[] netLayers = null)
     {
-        Init(netLayers);
+        Init(netLayers[0], netLayers[^1]);
     }
 
     public void SetInputValues(float[] inputValues)
     {
-        for (int i = 0; i < _netLayers[0]; i++)
-        {
-            _nodes[i].Value = inputValues[i];
-        }
+
     }
 
     public float[] GetOutputValues()
     {
-        float[] outputValues = new float[_netLayers[^1]];
-        for (int i = 0; i < _netLayers[^1]; i++)
-        {
-            outputValues[i] = _nodes[_nodes.Count - _netLayers[^1] + i].Value;
-        }
+        float[] outputValues = new float[] { };
+
         return outputValues;
     }
 
     public void EvaluateInput(Dictionary<int, Node> inputValues, Dictionary<int, Node> desiredOutputValues)
     {
-        // Set input values
-        for (int i = 0; i < _netLayers[0]; i++)
-        {
-            _nodes[i].Value = inputValues[i].Value;
-        }
 
-        // Set desired output values
-        for (int i = 0; i < _netLayers[^1]; i++)
-        {
-            _nodes[_nodes.Count - _netLayers[^1] + i].DesiredValue = desiredOutputValues[i].Value;
-        }
 
         // Evaluate network
         for (int i = 0; i < _nodes.Count; i++)
@@ -202,24 +154,10 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public Dictionary<int, Node> FeedForward(Dictionary<int, Node> inputValues)
     {
-        // Set input values
-        for (int i = 0; i < _netLayers[0]; i++)
-        {
-            _nodes[i].Value = inputValues[i].Value;
-        }
-
-        // Evaluate network
-        for (int i = 0; i < _nodes.Count; i++)
-        {
-            EvaluateNode(_nodes[i]);
-        }
 
         // Return output values
         Dictionary<int, Node> outputValues = new();
-        for (int i = 0; i < _netLayers[^1]; i++)
-        {
-            outputValues.Add(i, _nodes[_nodes.Count - _netLayers[^1] + i]);
-        }
+
         return outputValues;
     }
 

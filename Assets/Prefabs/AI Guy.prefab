@@ -500,7 +500,6 @@ MonoBehaviour:
   _cam: {fileID: 0}
   AgentMoveAcceleration: 0
   AgentTurnTorque: 0
-  _neuralNetworkLayers: 0a0000000000000002000000
   _moveMultiplier: 50
   _turnMultiplier: 500
   _inputBias: 0.25
@@ -516,6 +515,8 @@ MonoBehaviour:
   MaxEnergy: 10
   MinEnergy: 0
   MyManager: {fileID: 585850378456658182, guid: 339693f2cd522444c9406a168eb44aa8, type: 3}
+  BrainInputNodesCount: 10
+  BrainOutputNodesCount: 4
   MyTarget: {fileID: 6855806191119263013, guid: 1ef31a2125f734765844574bff19277d, type: 3}
   MyNumber: 0
   isDead: 0

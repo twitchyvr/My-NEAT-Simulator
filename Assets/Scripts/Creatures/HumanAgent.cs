@@ -63,7 +63,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     public float MinEnergy = 0f;
     public PopulationManager MyManager;
     public NeuralNetwork MyBrain { get { return _neuralNetwork; } set { _neuralNetwork = value; } }
-    public int BrainInputNodesCount = 8;
+    public int BrainInputNodesCount = 10;
     public int BrainOutputNodesCount = 4;
     public GameObject MyTarget;
     public int MyNumber = 0;
