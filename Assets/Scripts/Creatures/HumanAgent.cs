@@ -47,7 +47,6 @@ public class HumanAgent : MonoBehaviour, ICreature
     [SerializeField] Camera _cam;
     [Range(-1f, 1f)] public float AgentMoveAcceleration = 0f;
     [Range(-1f, 1f)] public float AgentTurnTorque = 0f;
-    [SerializeField] private int[] _neuralNetworkLayers = new int[] { 10, 0, 4 };
     [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
     [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
     [SerializeField][Range(0.0001f, 1f)] private float _inputBias = 0.25f;
@@ -64,6 +63,8 @@ public class HumanAgent : MonoBehaviour, ICreature
     public float MinEnergy = 0f;
     public PopulationManager MyManager;
     public NeuralNetwork MyBrain { get { return _neuralNetwork; } set { _neuralNetwork = value; } }
+    public int BrainInputNodesCount = 8;
+    public int BrainOutputNodesCount = 4;
     public GameObject MyTarget;
     public int MyNumber = 0;
     #endregion
@@ -87,7 +88,6 @@ public class HumanAgent : MonoBehaviour, ICreature
     public Transform GetTransform { get { return _transform; } }
     public Rigidbody GetRigidbody { get { return _rigidbody; } }
     public NeuralNetwork GetNeuralNetwork { get { return _neuralNetwork; } }
-    public int[] GetNeuralNetworkLayers { get { return _neuralNetworkLayers; } set { _neuralNetworkLayers = value; } }
     int ICreature.MyNumber { get { return MyNumber; } set { MyNumber = value; } }
     float ICreature.Age { get { return Age; } }
     float ICreature.Health { get { return Health; } }
@@ -207,6 +207,7 @@ public class HumanAgent : MonoBehaviour, ICreature
 
     public void Init()
     {
+        int[] _neuralNetworkLayers = new int[] { BrainInputNodesCount, BrainOutputNodesCount };
         _neuralNetwork = new NeuralNetwork(_neuralNetworkLayers);
     }
 
@@ -239,11 +240,6 @@ public class HumanAgent : MonoBehaviour, ICreature
     public void SetNeuralNetwork(NeuralNetwork neuralNetwork)
     {
         _neuralNetwork = neuralNetwork;
-    }
-
-    public void SetNeuralNetworkLayers(int[] layers)
-    {
-        _neuralNetworkLayers = layers;
     }
 
     public void CreatureUpdate()
@@ -322,7 +318,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     public Dictionary<int, Node> ProcessInputs()
     {
         // Get the inputs
-        float[] inputs = new float[_neuralNetworkLayers[0]];
+        float[] inputs = new float[BrainInputNodesCount];
         inputs[0] = _transform.position.x;  // x position sensor
         inputs[1] = _transform.position.z;  // z position sensor
         inputs[2] = 0;                      // food sensor
