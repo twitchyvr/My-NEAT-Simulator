@@ -118,6 +118,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                     {
                         Connection connection = new(connId, thisNodeId, otherNodeId);
                         _connections.Add(connId, connection);
+                        _nodes[thisNodeId].Connections.Add(connId, connection);
                         connId++;
                     }
                 }
