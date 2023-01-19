@@ -76,7 +76,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         // Init with the first and last layers
         Init(netLayers[0], netLayers[^1]);
     }
-
     #endregion
 
     #region Methods
@@ -116,10 +115,9 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 {
                     if (otherNode.Type == Node.NodeType.Output)
                     {
-                        Connection connection = new(connId, thisNodeId, otherNodeId);
+                        Connection connection = new(connId, thisNodeId, otherNodeId, 0f, true, false);
                         _connections.Add(connId, connection);
                         _nodes[thisNodeId].Connections.Add(connId, connection);
-                        connId++;
                     }
                 }
             }
@@ -139,7 +137,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public void EvaluateNode(Node node)
     {
-        foreach ((int connectionId, Connection connectionItem) in node.Connections)
+        foreach ((int innovationId, Connection connectionItem) in node.Connections)
         {
             if (connectionItem.Enabled)
             {
@@ -269,9 +267,9 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
         // Create new connections
         int newConnectionId1 = _connections.Count + 1;
-        Connection newConnection1 = new(newConnectionId1, _connections[connectionId].FromNodeId, newNodeId, _connections[connectionId].Weight);
+        Connection newConnection1 = new(newConnectionId1, _connections[connectionId].FromNodeId, newNodeId, _connections[connectionId].Weight, true, false);
         int newConnectionId2 = _connections.Count + 2;
-        Connection newConnection2 = new(newConnectionId2, newNodeId, _connections[connectionId].ToNodeId, 1);
+        Connection newConnection2 = new(newConnectionId2, newNodeId, _connections[connectionId].ToNodeId, 1, true, false);
 
         // Add new connections to nodes
         _nodes[_connections[connectionId].FromNodeId].AddConnection(newConnection1);

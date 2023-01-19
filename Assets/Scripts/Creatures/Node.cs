@@ -183,7 +183,7 @@ public class Node
 
         for (int i = 0; i < connections.Count; i++)
         {
-            _connections.Add(connections[i].Id, connections[i]);
+            _connections.Add(connections[i].InnovationId, connections[i]);
         }
         for (int i = 0; i < connections.Count; i++)
         {
@@ -204,12 +204,12 @@ public class Node
 
     public void AddConnection(Connection connection)
     {
-        _connections.Add(connection.Id, connection);
+        _connections.Add(connection.InnovationId, connection);
     }
 
     public void RemoveConnection(Connection connection)
     {
-        _connections.Remove(connection.Id);
+        _connections.Remove(connection.InnovationId);
     }
 
     public void RemoveConnection(int connectionId)
@@ -348,7 +348,7 @@ public class Node
         _connections = new Dictionary<int, Connection>();
         for (int i = 0; i < node.Connections.Count; i++)
         {
-            _connections.Add(node.Connections[i].Id, node.Connections[i]);
+            _connections.Add(node.Connections[i].InnovationId, node.Connections[i]);
         }
     }
 

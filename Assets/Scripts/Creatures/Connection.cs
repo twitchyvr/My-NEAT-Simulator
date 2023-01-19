@@ -44,7 +44,6 @@ using System;
 public class Connection
 {
     #region Private Variables
-    private int id = -1;
     private int innovationId = -1;
     private int fromNodeId = -1;
     private int toNodeId = -1;
@@ -54,11 +53,6 @@ public class Connection
     #endregion
 
     #region Properties
-    public int Id
-    {
-        get { return id; }
-        set { id = value; }
-    }
     public int InnovationId
     {
         get { return innovationId; }
@@ -98,9 +92,8 @@ public class Connection
     #endregion
 
     #region Methods
-    public Connection(int connectionId, int innovationId, int fromNodeId, int toNodeId, float weight, bool enabled, bool isRecurrent)
+    public Connection(int innovationId, int fromNodeId, int toNodeId, float weight, bool enabled, bool isRecurrent)
     {
-        this.id = connectionId;
         this.innovationId = innovationId;
         this.fromNodeId = fromNodeId;
         this.toNodeId = toNodeId;
@@ -111,7 +104,6 @@ public class Connection
 
     public Connection(Connection connection)
     {
-        this.id = connection.id;
         this.innovationId = connection.innovationId;
         this.fromNodeId = connection.fromNodeId;
         this.toNodeId = connection.toNodeId;
@@ -120,75 +112,9 @@ public class Connection
         this.isRecurrent = connection.isRecurrent;
     }
 
-    public Connection(int newConnId, int fromNodeId, int toNodeId, float weight)
-    {
-        this.id = newConnId;
-        this.innovationId = -1;
-        this.fromNodeId = fromNodeId;
-        this.toNodeId = toNodeId;
-        this.weight = weight;
-        this.enabled = true;
-        this.isRecurrent = false;
-    }
-
-    public Connection(int newConnId, Node fromNode, Node toNode)
-    {
-        this.id = newConnId;
-        this.innovationId = -1;
-        this.fromNodeId = fromNode.Id;
-        this.toNodeId = toNode.Id;
-        this.weight = Init();
-        this.enabled = true;
-        this.isRecurrent = false;
-    }
-
-    public Connection(int newConnId, int fromNodeId, int toNodeId)
-    {
-        this.id = newConnId;
-        this.innovationId = -1;
-        this.fromNodeId = fromNodeId;
-        this.toNodeId = toNodeId;
-        this.weight = Init();
-        this.enabled = true;
-        this.isRecurrent = false;
-    }
-
-    public Connection(int newConnId, int innovationId, int fromNodeId, int toNodeId, float weight)
-    {
-        this.id = newConnId;
-        this.innovationId = innovationId;
-        this.fromNodeId = fromNodeId;
-        this.toNodeId = toNodeId;
-        this.weight = weight;
-        this.enabled = true;
-        this.isRecurrent = false;
-    }
-
-    public Connection(int newConnId, int innovationId, int fromNodeId, int toNodeId)
-    {
-        this.id = newConnId;
-        this.innovationId = innovationId;
-        this.fromNodeId = fromNodeId;
-        this.toNodeId = toNodeId;
-        this.weight = Init();
-        this.enabled = true;
-        this.isRecurrent = false;
-    }
-
-    public Connection(int newConnId, int innovationId, int fromNodeId, int toNodeId, bool isConnRecurrent)
-    {
-        this.id = newConnId;
-        this.innovationId = innovationId;
-        this.fromNodeId = fromNodeId;
-        this.toNodeId = toNodeId;
-        this.weight = Init();
-        this.enabled = true;
-        this.isRecurrent = isConnRecurrent;
-    }
-
     public override string ToString()
     {
-        return "[" + id + "] = " + fromNodeId + " -> " + ToNodeId + " : " + weight;
+        return "[" + innovationId + "] = " + fromNodeId + " -> " + ToNodeId + " : " + weight;
     }
 
     public float Init()
