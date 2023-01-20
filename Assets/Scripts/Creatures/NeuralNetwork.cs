@@ -87,13 +87,13 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     public void Init(int inputNodesCount, int outputNodesCount, bool addBiasNode = true)
     {
         int nodeId = 1;
-        int connId = 0;
+        int connId = -1;
 
         // Create input nodes
         for (int i = 1; i <= inputNodesCount; i++)
         {
-            Node node = new(nodeId, Node.NodeType.Input);
-            _nodes.Add(nodeId, node);
+            Node inNode = new(nodeId, Node.NodeType.Input);
+            _nodes.Add(nodeId, inNode);
             nodeId++;
         }
 
@@ -108,8 +108,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         // Create output nodes
         for (int i = 1; i <= outputNodesCount; i++)
         {
-            Node node = new(nodeId, Node.NodeType.Output);
-            _nodes.Add(nodeId, node);
+            Node outNode = new(nodeId, Node.NodeType.Output);
+            _nodes.Add(nodeId, outNode);
             nodeId++;
         }
 
@@ -144,13 +144,65 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     public void EvaluateNode(Node node)
     {
         // If the node is an input or bias node, return
+        if (node.Type == Node.NodeType.Input || node.Type == Node.NodeType.Bias)
+        {
+            return;
+        }
+
+        // If the node is an output node, evaluate the node
+        if (node.Type == Node.NodeType.Output)
+        {
+            node.Value = 0f;
+            foreach ((int connectionId, Connection connection) in _connections)
+            {
+                if (connection.ToNodeId == node.Id)
+                {
+                    node.Value += _nodes[connection.FromNodeId].Value * connection.Weight;
+                }
+            }
+            node.Value = Sigmoid(node.Value);
+        }
+
+        // If the node is a hidden node, evaluate the node
+        if (node.Type == Node.NodeType.Hidden)
+        {
+            node.Value = 0f;
+            foreach ((int connectionId, Connection connection) in _connections)
+            {
+                if (connection.ToNodeId == node.Id)
+                {
+                    node.Value += _nodes[connection.FromNodeId].Value * connection.Weight;
+                }
+            }
+            node.Value = Sigmoid(node.Value);
+        }
     }
 
     public Dictionary<int, Node> FeedForward(Dictionary<int, Node> inputValues)
     {
 
-        // Return output values
+        // Set input values
+        foreach ((int nodeId, Node nodeItem) in inputValues)
+        {
+            if (_nodes.ContainsKey(nodeId))
+                _nodes[nodeId].Value = nodeItem.Value;
+        }
+
+        // Evaluate network
+        for (int i = 1; i <= _nodes.Count; i++)
+        {
+            EvaluateNode(_nodes[i]);
+        }
+
+        // Get output values
         Dictionary<int, Node> outputValues = new();
+        foreach ((int nodeId, Node nodeItem) in _nodes)
+        {
+            if (nodeItem.Type == Node.NodeType.Output)
+            {
+                outputValues.Add(nodeId, nodeItem);
+            }
+        }
 
         return outputValues;
     }
@@ -276,5 +328,37 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         // Disable old connection
         _connections[connectionId].Enabled = false;
     }
+
+    public float Sigmoid(float x)
+    {
+        return 1 / (1 + Mathf.Exp(-x));
+    }
+
+    public float SigmoidDerivative(float x)
+    {
+        return Sigmoid(x) * (1 - Sigmoid(x));
+    }
+
+    public void AddConnection(int fromNodeId, int toNodeId)
+    {
+        int newConnectionId = _connections.Count + 1;
+        Connection newConnection = new(newConnectionId, fromNodeId, toNodeId, 1, true, false);
+        _connections.Add(newConnectionId, newConnection);
+    }
+
+    public void AddNodeMutation()
+    {
+        int randomConnectionId = UnityEngine.Random.Range(0, _connections.Count);
+        AddNode(randomConnectionId);
+    }
+
+    public void AddConnectionMutation()
+    {
+        int randomFromNodeId = UnityEngine.Random.Range(0, _nodes.Count);
+        int randomToNodeId = UnityEngine.Random.Range(0, _nodes.Count);
+        AddConnection(randomFromNodeId, randomToNodeId);
+    }
+
+
     #endregion
 }
