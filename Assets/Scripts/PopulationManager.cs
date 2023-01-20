@@ -99,7 +99,7 @@ public class PopulationManager : MonoBehaviour
             Vector3 startingPos = new(this.transform.position.x + Random.Range(-2, 2), 0, this.transform.position.z + Random.Range(-2, 2));
             GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
             agent.name = "Agent " + i;
-            agent.GetComponent<HumanAgent>().Init();
+            agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork(agent.GetComponent<HumanAgent>().BrainInputNodesCount, agent.GetComponent<HumanAgent>().BrainOutputNodesCount);
             agent.GetComponent<HumanAgent>().MyManager = this;
             agent.GetComponent<HumanAgent>().MyNumber = i;
             Agents.Add(agent);
@@ -115,64 +115,41 @@ public class PopulationManager : MonoBehaviour
             Camera.main.transform.position = new Vector3(SelectedAgent.transform.position.x, Camera.main.transform.position.y, SelectedAgent.transform.position.z);
         }
 
-        if (Agents.Count < PopulationSize)
+        if (Agents.Count == 0)
         {
-            NewGeneration(PopulationSize - Agents.Count);
+            AllAgentsDead = true;
+        }
+        else
+        {
+            AllAgentsDead = false;
         }
     }
 
-    private void NewGeneration(int genAmount)
+    protected void FixedUpdate()
     {
-        // New generation of agents, with the best from the previous generation being crossed over with the second best
-        // and mutated to create the new generation.
-
-        // Sort the agents by fitness
-        Agents.Sort((x, y) => x.GetComponent<HumanAgent>().BrainFitness.CompareTo(y.GetComponent<HumanAgent>().BrainFitness));
-        Agents.Reverse();
-
-        HumanAgent bestAgent;
-        if (Agents.Count == 0) return;
-        if (Agents[0].GetComponent<HumanAgent>() == null) return;
-
-        bestAgent = Agents[0].GetComponent<HumanAgent>();
-
-        // Save the best agent
-        if (bestAgent.BrainFitness > BestFitness)
+        if (AllAgentsDead)
         {
-            BestFitness = Agents[0].GetComponent<HumanAgent>().BrainFitness;
-            BestGeneration = Generation;
-            BestTrial = Agents[0].GetComponent<HumanAgent>().MyNumber;
-            BestGenome = Agents[0].GetComponent<HumanAgent>().MyNumber;
-            Agents[0].GetComponent<HumanAgent>().MyBrain.Save("BestGenome");
+            Repopulate();
+            Generation++;
         }
+    }
 
-        // Repopulate the agents
-        for (int i = 0; i < genAmount; i++)
+    /// <summary>
+    /// This method repopulates the population with new agents.
+    /// </summary>
+    public void Repopulate()
+    {
+        for (int i = 0; i < PopulationSize; i++)
         {
-            // Select the parents
-            NeuralNetwork parent1 = Agents[0].GetComponent<HumanAgent>().MyBrain;
-            NeuralNetwork parent2 = Agents[1].GetComponent<HumanAgent>().MyBrain;
-
-            // Create the child
-            NeuralNetwork child = parent1.Crossover(parent2);
-
-            // Mutate the child
-            child.Mutate();
-
-            // Destroy the old agent
-            Destroy(Agents[i]);
-
-            // Create a new agent
+            Instance = this.gameObject;
             Vector3 startingPos = new(this.transform.position.x + Random.Range(-2, 2), 0, this.transform.position.z + Random.Range(-2, 2));
             GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
             agent.name = "Agent " + i;
-            agent.GetComponent<HumanAgent>().Init();
+            agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork(agent.GetComponent<HumanAgent>().BrainInputNodesCount, agent.GetComponent<HumanAgent>().BrainOutputNodesCount);
             agent.GetComponent<HumanAgent>().MyManager = this;
-            agent.GetComponent<HumanAgent>().MyBrain = child;
             agent.GetComponent<HumanAgent>().MyNumber = i;
-            Agents[i] = agent;
+            Agents.Add(agent);
         }
-
     }
 
     public void AgentSelected(GameObject agent)

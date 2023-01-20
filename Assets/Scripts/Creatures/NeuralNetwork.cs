@@ -54,6 +54,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     //    private int[] _netLayers;
     private Dictionary<int, Node> _nodes = new();
     private Dictionary<int, Connection> _connections = new();
+    private float _defaultBias = 0.25f;
     private float _fitness;
     #endregion
 
@@ -74,17 +75,17 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     public NeuralNetwork(int[] netLayers = null)
     {
         // Init with the first and last layers
-        Init(netLayers[0], netLayers[^1]);
+        Initialize(netLayers[0], netLayers[^1]);
     }
 
     public NeuralNetwork(int inputNodesCount, int outputNodesCount)
     {
-        Init(inputNodesCount, outputNodesCount);
+        Initialize(inputNodesCount, outputNodesCount);
     }
     #endregion
 
     #region Methods
-    public void Init(int inputNodesCount, int outputNodesCount, bool addBiasNode = true)
+    public void Initialize(int inputNodesCount, int outputNodesCount, bool addBiasNode = true)
     {
         int nodeId = 1;
         int connId = -1;
@@ -93,6 +94,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         for (int i = 1; i <= inputNodesCount; i++)
         {
             Node inNode = new(nodeId, Node.NodeType.Input);
+            inNode.Value = 0f;
+            inNode.NodeLayer = 1;
             _nodes.Add(nodeId, inNode);
             nodeId++;
         }
@@ -101,6 +104,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         Node biasNode = new(nodeId, Node.NodeType.Bias);
         if (addBiasNode)
         {
+            biasNode.Value = _defaultBias;
+            biasNode.NodeLayer = 1;
             _nodes.Add(nodeId, biasNode);
             nodeId++;
         }
@@ -109,6 +114,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         for (int i = 1; i <= outputNodesCount; i++)
         {
             Node outNode = new(nodeId, Node.NodeType.Output);
+            outNode.Value = 0;
+            outNode.NodeLayer = 2;
             _nodes.Add(nodeId, outNode);
             nodeId++;
         }
@@ -124,7 +131,12 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                     if (otherNode.Type == Node.NodeType.Output)
                     {
                         connId = thisNodeId * 100000 + otherNodeId;
-                        Connection connection = new(connId, thisNodeId, otherNodeId, 0f, true, false);
+                        bool isEnabled = true;
+                        if (UnityEngine.Random.Range(1, 100) < 5)
+                        {
+                            isEnabled = false;
+                        }
+                        Connection connection = new(connId, thisNodeId, otherNodeId, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
                         _connections.Add(connection.InnovationId, connection);
                     }
                 }
@@ -132,233 +144,61 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         }
     }
 
-    public void EvaluateInput(Dictionary<int, Node> inputValues, Dictionary<int, Node> desiredOutputValues)
-    {
-        // Evaluate network
-        for (int i = 0; i < _nodes.Count; i++)
-        {
-            EvaluateNode(_nodes[i]);
-        }
-    }
-
-    public void EvaluateNode(Node node)
-    {
-        // If the node is an input or bias node, return
-        if (node.Type == Node.NodeType.Input || node.Type == Node.NodeType.Bias)
-        {
-            return;
-        }
-
-        // If the node is an output node, evaluate the node
-        if (node.Type == Node.NodeType.Output)
-        {
-            node.Value = 0f;
-            foreach ((int connectionId, Connection connection) in _connections)
-            {
-                if (connection.ToNodeId == node.Id)
-                {
-                    node.Value += _nodes[connection.FromNodeId].Value * connection.Weight;
-                }
-            }
-            node.Value = Sigmoid(node.Value);
-        }
-
-        // If the node is a hidden node, evaluate the node
-        if (node.Type == Node.NodeType.Hidden)
-        {
-            node.Value = 0f;
-            foreach ((int connectionId, Connection connection) in _connections)
-            {
-                if (connection.ToNodeId == node.Id)
-                {
-                    node.Value += _nodes[connection.FromNodeId].Value * connection.Weight;
-                }
-            }
-            node.Value = Sigmoid(node.Value);
-        }
-    }
-
-    public Dictionary<int, Node> FeedForward(Dictionary<int, Node> inputValues)
+    /// <summary>
+    /// This method adds a node to the network
+    /// </summary>
+    public void AddANode()
     {
 
-        // Set input values
-        foreach ((int nodeId, Node nodeItem) in inputValues)
-        {
-            if (_nodes.ContainsKey(nodeId))
-                _nodes[nodeId].Value = nodeItem.Value;
-        }
-
-        // Evaluate network
-        for (int i = 1; i <= _nodes.Count; i++)
-        {
-            EvaluateNode(_nodes[i]);
-        }
-
-        // Get output values
-        Dictionary<int, Node> outputValues = new();
-        foreach ((int nodeId, Node nodeItem) in _nodes)
-        {
-            if (nodeItem.Type == Node.NodeType.Output)
-            {
-                outputValues.Add(nodeId, nodeItem);
-            }
-        }
-
-        return outputValues;
     }
 
-    public override string ToString()
+    /// <summary>
+    /// This method adds a connection to the network
+    /// </summary>
+    public void AddAConnection()
     {
-        string s = "";
-        for (int i = 0; i < _nodes.Count; i++)
-        {
-            s += _nodes[i].ToString() + "\n";
-        }
-        return s;
+
     }
 
+    /// <summary>
+    /// This method will mutate the network
+    /// </summary>
     public void Mutate()
     {
-        // Mutate weights
-        foreach ((int connectionId, Connection connectionItem) in _connections)
+
+    }
+
+    /// <summary>
+    /// This method will load the inputs into the network
+    /// </summary>
+    /// <param name="inputs">The inputs to load into the network </param>
+    /// <returns>The inputs loaded into the network</returns>
+    public Dictionary<int, Node> LoadInputs(Dictionary<int, Node> inputs)
+    {
+        // Load the inputs into the input nodes
+        foreach ((int nodeId, Node node) in inputs)
         {
-            connectionItem.Mutate();
+            _nodes[nodeId].Value = node.Value;
         }
 
-        // Mutate nodes
-        foreach ((int nodeId, Node nodeItem) in _nodes)
-        {
-            nodeItem.Mutate();
-        }
+        return _nodes;
     }
 
-    public NeuralNetwork Crossover(NeuralNetwork otherParent)
+    /// <summary>
+    /// This method will run the network
+    /// </summary>
+    public void RunTheNetwork()
     {
-        // Crossover weights
-        foreach ((int connectionId, Connection connectionItem) in _connections)
-        {
-            connectionItem.Crossover(otherParent._connections[connectionId]);
-        }
 
-        // Crossover nodes
-        foreach ((int nodeId, Node nodeItem) in _nodes)
-        {
-            nodeItem.Copy(otherParent._nodes[nodeId]);
-        }
-
-        return this;
     }
 
-    public void Copy(NeuralNetwork otherParent)
+    /// <summary>
+    /// This method will get the outputs from the network
+    /// </summary>
+    public void GetOutputs()
     {
-        // Copy weights
-        foreach ((int connectionId, Connection connectionItem) in _connections)
-        {
-            int copyId = _connections.Count + 1;
-            connectionItem.Copy(otherParent._connections[connectionId]);
-            connectionItem.InnovationId = copyId;
-        }
 
-        // Copy nodes
-        foreach ((int nodeId, Node nodeItem) in _nodes)
-        {
-            int copyId = _nodes.Count + 1;
-            nodeItem.Copy(otherParent._nodes[nodeId]);
-            nodeItem.Id = copyId;
-        }
     }
-
-    public void Reset()
-    {
-        foreach ((int nodeId, Node nodeItem) in _nodes)
-        {
-            nodeItem.Reset();
-        }
-    }
-
-    public void Save(string path)
-    {
-        string json = JsonUtility.ToJson(this);
-        File.WriteAllText(path, json);
-    }
-
-    public static NeuralNetwork Load(string path)
-    {
-        string json = File.ReadAllText(path);
-        return JsonUtility.FromJson<NeuralNetwork>(json);
-    }
-
-    public void SaveAsAsset(string path)
-    {
-        string json = JsonUtility.ToJson(this);
-        File.WriteAllText(path, json);
-    }
-
-    public static NeuralNetwork LoadFromAsset(string path)
-    {
-        string json = File.ReadAllText(path);
-        return JsonUtility.FromJson<NeuralNetwork>(json);
-    }
-
-    public void CalculateNetworkFitness()
-    {
-        float fitness = 0;
-        foreach ((int nodeId, Node nodeItem) in _nodes)
-        {
-            fitness += nodeItem.CalculateNodeFitness(); // Calculate node fitness by comparing node value to desired value
-        }
-        Fitness = fitness;
-    }
-
-    public void AddNode(int connectionId)
-    {
-        // Create new node
-        int newNodeId = _nodes.Count + 1;
-        Node newNode = new(newNodeId, Node.NodeType.Hidden);
-
-        // Create new connections
-        int newConnectionId1 = _connections.Count + 1;
-        Connection newConnection1 = new(newConnectionId1, _connections[connectionId].FromNodeId, newNodeId, _connections[connectionId].Weight, true, false);
-        int newConnectionId2 = _connections.Count + 2;
-        Connection newConnection2 = new(newConnectionId2, newNodeId, _connections[connectionId].ToNodeId, 1, true, false);
-
-        // Add new node to network
-        _nodes.Add(newNodeId, newNode);
-
-        // Disable old connection
-        _connections[connectionId].Enabled = false;
-    }
-
-    public float Sigmoid(float x)
-    {
-        return 1 / (1 + Mathf.Exp(-x));
-    }
-
-    public float SigmoidDerivative(float x)
-    {
-        return Sigmoid(x) * (1 - Sigmoid(x));
-    }
-
-    public void AddConnection(int fromNodeId, int toNodeId)
-    {
-        int newConnectionId = _connections.Count + 1;
-        Connection newConnection = new(newConnectionId, fromNodeId, toNodeId, 1, true, false);
-        _connections.Add(newConnectionId, newConnection);
-    }
-
-    public void AddNodeMutation()
-    {
-        int randomConnectionId = UnityEngine.Random.Range(0, _connections.Count);
-        AddNode(randomConnectionId);
-    }
-
-    public void AddConnectionMutation()
-    {
-        int randomFromNodeId = UnityEngine.Random.Range(0, _nodes.Count);
-        int randomToNodeId = UnityEngine.Random.Range(0, _nodes.Count);
-        AddConnection(randomFromNodeId, randomToNodeId);
-    }
-
 
     #endregion
 }

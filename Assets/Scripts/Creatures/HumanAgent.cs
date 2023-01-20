@@ -205,12 +205,6 @@ public class HumanAgent : MonoBehaviour, ICreature
         }
     }
 
-    public void Init()
-    {
-        int[] _neuralNetworkLayers = new int[] { BrainInputNodesCount, BrainOutputNodesCount };
-        _neuralNetwork = new NeuralNetwork(_neuralNetworkLayers);
-    }
-
     /// <summary>
     /// The Move method will move the creature based on the input.
     /// </summary>
@@ -387,12 +381,8 @@ public class HumanAgent : MonoBehaviour, ICreature
             }
         }
 
-        // Get the outputs
-        if (_neuralNetwork == null)
-        {
-            Init();
-        }
-        Dictionary<int, Node> outputs = _neuralNetwork.FeedForward(inputDictionary);
+        // For each output node in the neural network, set the value to the output of the node
+        Dictionary<int, Node> outputs = _neuralNetwork.LoadInputs(inputDictionary);
         return outputs;
     }
 
