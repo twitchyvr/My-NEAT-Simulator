@@ -126,8 +126,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public void EvaluateInput(Dictionary<int, Node> inputValues, Dictionary<int, Node> desiredOutputValues)
     {
-
-
         // Evaluate network
         for (int i = 0; i < _nodes.Count; i++)
         {

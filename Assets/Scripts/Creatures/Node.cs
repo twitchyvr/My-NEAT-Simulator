@@ -45,7 +45,6 @@ public class Node
     #region Private Variables
     private int _id = 0;
     private float _value = -1;  // The value of this node
-    private Dictionary<int, Connection> _connections;
 
     private NodeType _type;
     private float _inputSum = 0;
@@ -66,12 +65,6 @@ public class Node
     {
         get { return _value; }
         set { _value = value; }
-    }
-
-    public Dictionary<int, Connection> Connections
-    {
-        get { return _connections; }
-        set { _connections = value; }
     }
 
     public NodeType Type
@@ -169,28 +162,6 @@ public class Node
         _inputSum = 0;
         _outputSum = 0;
         _value = 0;
-        _connections = new Dictionary<int, Connection>();
-    }
-
-    public Node(int id, NodeType type, int nodeLayer, Dictionary<int, Connection> connections)
-    {
-        _id = id;
-        _type = type;
-        _nodeLayer = nodeLayer;
-        _connections = connections;
-        _inputSum = 0;
-        _outputSum = 0;
-
-        for (int i = 0; i < connections.Count; i++)
-        {
-            _connections.Add(connections[i].InnovationId, connections[i]);
-        }
-        for (int i = 0; i < connections.Count; i++)
-        {
-            _inputSum += connections[i].ToNodeId == id ? connections[i].Weight : 0;  // If the connection is going to this node, add the weight to the input sum or else add 0
-            _outputSum += connections[i].FromNodeId == id ? connections[i].Weight : 0;  // If the connection is coming from this node, add the weight to the output sum
-        }
-        _value = Tanh(_inputSum);
     }
 
     public Node(int id, NodeType type, int nodeLayer, float value)
@@ -200,26 +171,6 @@ public class Node
         _nodeLayer = nodeLayer;
         _connections = new Dictionary<int, Connection>();
         _value = value;
-    }
-
-    public void AddConnection(Connection connection)
-    {
-        _connections.Add(connection.InnovationId, connection);
-    }
-
-    public void RemoveConnection(Connection connection)
-    {
-        _connections.Remove(connection.InnovationId);
-    }
-
-    public void RemoveConnection(int connectionId)
-    {
-        _connections.Remove(connectionId);
-    }
-
-    public void RemoveAllConnections()
-    {
-        _connections.Clear();
     }
 
     public void CalculateValue()
@@ -279,21 +230,6 @@ public class Node
             else
                 _value = 0.25f;
         }
-
-        for (int i = 0; i < _connections.Count; i++)
-        {
-            if (_connections.TryGetValue(i, out Connection connection))
-            {
-                if (connection.ToNodeId == _id && connection.FromNodeId != _id)
-                {
-                    _inputSum += connection.Weight;
-                }
-                if (connection.FromNodeId == _id && connection.ToNodeId != _id)
-                {
-                    _outputSum += connection.Weight;
-                }
-            }
-        }
     }
 
     public void Init(float value = -1)
@@ -306,29 +242,18 @@ public class Node
         {
             _value = value;
         }
-        for (int i = 0; i < _connections.Count; i++)
-        {
-            _connections[i].Init();
-        }
-        // Calculate the input sum by adding the weights of all the connections that are going to this node
-        _inputSum = _connections != null ? _connections.Sum(x => x.Value.ToNodeId == _id ? x.Value.Weight : 0) : 0;
-        _outputSum = _connections != null ? _connections.Sum(x => x.Value.FromNodeId == _id ? x.Value.Weight : 0) : 0;
     }
 
 
     public override string ToString()
     {
-        return "[" + _id + "] = " + _value + " (" + _type + ")" + " Connections: " + _connections.Count;
+        return "[" + _id + "] = " + _value + " (" + _type + ")";
     }
 
     internal void Mutate()
     {
         // Mutate the node values and connections weights
         _value = UnityEngine.Random.Range(-1f, 1f);
-        for (int i = 0; i < _connections.Count; i++)
-        {
-            _connections[i].Mutate();
-        }
     }
 
     internal void Reset()
@@ -345,11 +270,6 @@ public class Node
         _inputSum = node.InputSum;
         _outputSum = node.OutputSum;
         _nodeLayer = node.NodeLayer;
-        _connections = new Dictionary<int, Connection>();
-        for (int i = 0; i < node.Connections.Count; i++)
-        {
-            _connections.Add(node.Connections[i].InnovationId, node.Connections[i]);
-        }
     }
 
     internal void Crossover(Node node)
@@ -360,17 +280,12 @@ public class Node
         _inputSum = node.InputSum;
         _outputSum = node.OutputSum;
         _nodeLayer = node.NodeLayer;
-        _connections = new Dictionary<int, Connection>();
     }
 
     internal float CalculateNodeFitness()
     {
         // Calculate the fitness of the node
         float fitness = 0;
-        for (int i = 0; i < _connections.Count; i++)
-        {
-            fitness += _connections[i].Weight;
-        }
         return fitness;
     }
 
