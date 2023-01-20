@@ -53,7 +53,6 @@ public class Node
     private float _desiredValue = 0;
 
     private bool _enabled = false;
-
     #endregion
 
     #region Properties
@@ -99,6 +98,7 @@ public class Node
         set { _desiredValue = value; }
     }
     #endregion
+
     #region Enums
     public enum NodeType
     {
