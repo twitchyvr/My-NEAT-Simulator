@@ -267,13 +267,15 @@ public class HumanAgent : MonoBehaviour, ICreature
 
         // Find the first value in the output nodes
 
-        BrainFitness = (outputs[0].Value + outputs[1].Value) / MyBrain.Nodes.Count;
-        MyBrain.Fitness = BrainFitness;
+        if (outputs.ContainsKey(0) && outputs.ContainsKey(1))
+        {
+            BrainFitness = (outputs[0].Value + outputs[1].Value) / MyBrain.Nodes.Count;
+            MyBrain.Fitness = BrainFitness;
 
-        AgentMoveAcceleration = outputs[0].Value;
-        AgentTurnTorque = outputs[1].Value;
-        Move(AgentMoveAcceleration, AgentTurnTorque);
-
+            AgentMoveAcceleration = outputs[0].Value;
+            AgentTurnTorque = outputs[1].Value;
+            Move(AgentMoveAcceleration, AgentTurnTorque);
+        }
         _lastUpdateTime = Time.time;
     }
 
@@ -391,13 +393,6 @@ public class HumanAgent : MonoBehaviour, ICreature
             Init();
         }
         Dictionary<int, Node> outputs = _neuralNetwork.FeedForward(inputDictionary);
-
-        // Process the outputs
-        float[] outputArray = new float[outputs.Count];
-        for (int i = 0; i < outputs.Count; i++)
-        {
-            outputArray[i] = outputs[i].Value;
-        }
         return outputs;
     }
 
