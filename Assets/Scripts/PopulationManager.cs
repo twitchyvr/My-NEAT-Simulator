@@ -131,8 +131,14 @@ public class PopulationManager : MonoBehaviour
         Agents.Sort((x, y) => x.GetComponent<HumanAgent>().BrainFitness.CompareTo(y.GetComponent<HumanAgent>().BrainFitness));
         Agents.Reverse();
 
+        HumanAgent bestAgent;
+        if (Agents.Count == 0) return;
+        if (Agents[0].GetComponent<HumanAgent>() == null) return;
+
+        bestAgent = Agents[0].GetComponent<HumanAgent>();
+
         // Save the best agent
-        if (Agents[0].GetComponent<HumanAgent>().BrainFitness > BestFitness)
+        if (bestAgent.BrainFitness > BestFitness)
         {
             BestFitness = Agents[0].GetComponent<HumanAgent>().BrainFitness;
             BestGeneration = Generation;
