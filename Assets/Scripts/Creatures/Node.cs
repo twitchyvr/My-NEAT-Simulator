@@ -52,6 +52,8 @@ public class Node
     private int _nodeLayer = 0;
     private float _desiredValue = 0;
 
+    private bool _enabled = false;
+
     #endregion
 
     #region Properties
@@ -96,7 +98,6 @@ public class Node
         get { return _desiredValue; }
         set { _desiredValue = value; }
     }
-
     #endregion
     #region Enums
     public enum NodeType
@@ -110,51 +111,40 @@ public class Node
     #endregion
 
     #region Methods
-    public Node(int id)
+    public Node(int id, bool isEnabled = true)
     {
         _id = id;
         _type = NodeType.Input;
         _value = 0;
-        _connections = new Dictionary<int, Connection>();
         _inputSum = 0;
         _outputSum = 0;
         _nodeLayer = 0;
+        _enabled = isEnabled;
     }
 
-    public Node(int id, NodeType type)
+    public Node(int id, NodeType type, bool isEnabled = true)
     {
         _id = id;
         _type = type;
         _value = 0;
-        _connections = new Dictionary<int, Connection>();
         _inputSum = 0;
         _outputSum = 0;
         _nodeLayer = 0;
+        _enabled = isEnabled;
     }
 
-    public Node(Node node)
-    {
-        _id = node.Id;
-        _value = node.Value;
-        _connections = node.Connections;
-        _type = node.Type;
-        _inputSum = node.InputSum;
-        _outputSum = node.OutputSum;
-        _nodeLayer = node.NodeLayer;
-    }
-
-    public Node(int id, int layer)
+    public Node(int id, int layer, bool isEnabled = true)
     {
         _id = id;
         _type = NodeType.Input;
         _value = 0;
-        _connections = new Dictionary<int, Connection>();
         _inputSum = 0;
         _outputSum = 0;
         _nodeLayer = layer;
+        _enabled = isEnabled;
     }
 
-    public Node(int id, NodeType type, int nodeLayer)
+    public Node(int id, NodeType type, int nodeLayer, bool isEnabled = true)
     {
         _id = id;
         _type = type;
@@ -162,15 +152,16 @@ public class Node
         _inputSum = 0;
         _outputSum = 0;
         _value = 0;
+        _enabled = isEnabled;
     }
 
-    public Node(int id, NodeType type, int nodeLayer, float value)
+    public Node(int id, NodeType type, int nodeLayer, float value, bool isEnabled = true)
     {
         _id = id;
         _type = type;
         _nodeLayer = nodeLayer;
-        _connections = new Dictionary<int, Connection>();
         _value = value;
+        _enabled = isEnabled;
     }
 
     public void CalculateValue()
@@ -232,6 +223,10 @@ public class Node
         }
     }
 
+    /// <summary>
+    /// Evaluates the node
+    /// </summary>
+    /// <param name="inputs">The inputs to the network</param>
     public void Init(float value = -1)
     {
         if (value == -1)
@@ -244,42 +239,44 @@ public class Node
         }
     }
 
-
     public override string ToString()
     {
         return "[" + _id + "] = " + _value + " (" + _type + ")";
     }
 
+    /// <summary>
+    /// This method mutates the node by generating a new random value between -1 and 1
+    /// </summary>
     internal void Mutate()
     {
         // Mutate the node values and connections weights
         _value = UnityEngine.Random.Range(-1f, 1f);
     }
 
-    internal void Reset()
+    /// <summary>
+    /// This method resets the node to the default value. This is used when resetting the network to its initial state.
+    /// </summary>
+    /// <param name="defaultValue">The default value to reset the node to. If no value is supplied, it will default to zero.</param>
+    internal void Reset(int defaultValue = 0)
     {
         // Reset the node values
-        _value = 0;
+        _value = defaultValue;
     }
 
+    /// <summary>
+    /// This method copies the node
+    /// </summary>
+    /// <param name="node">The node to copy</param>
     internal void Copy(Node node)
     {
+        node.SetEnabled(false);
         // Create a copy of the node
         _value = node.Value;
         _type = node.Type;
         _inputSum = node.InputSum;
         _outputSum = node.OutputSum;
         _nodeLayer = node.NodeLayer;
-    }
-
-    internal void Crossover(Node node)
-    {
-        // Create a crossover of the node
-        _value = node.Value;
-        _type = node.Type;
-        _inputSum = node.InputSum;
-        _outputSum = node.OutputSum;
-        _nodeLayer = node.NodeLayer;
+        _enabled = true;
     }
 
     internal float CalculateNodeFitness()
@@ -289,5 +286,14 @@ public class Node
         return fitness;
     }
 
+    public void SetEnabled(bool enabled)
+    {
+        _enabled = enabled;
+    }
+
+    public bool IsEnabled()
+    {
+        return _enabled;
+    }
     #endregion
 }
