@@ -117,7 +117,6 @@ public class GameManager : MonoBehaviour
         GUI.Label(new Rect(10, 40, 300, 20), $"Age: {CreatureAge}");
         GUI.Label(new Rect(10, 55, 300, 20), $"Energy: {CreatureEnergy}");
         int nodePos = 85;
-        int connPos = 10;
         // Show the selected creature's nodes and connections.
         if (SelectedCreature != null)
         {
@@ -128,12 +127,7 @@ public class GameManager : MonoBehaviour
                     GUI.Label(new Rect(10, nodePos, 300, 20), $"Node: {currentNode.Id} - Value: {currentNode.Value}");
                     nodePos += 15;
 
-                    foreach ((int currentConnId, Connection currentConnection) in currentNode.Connections)
-                    {
-                        // Place GUI.Label on right side of screen.
-                        GUI.Label(new Rect(Screen.width - 170, connPos, 300, 20), $"Node {currentNode.Id} - {currentConnection}");
-                        connPos += 15;
-                    }
+                    // Show the connections for the current node.
 
                 }
             }

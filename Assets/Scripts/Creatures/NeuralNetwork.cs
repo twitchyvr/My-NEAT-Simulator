@@ -76,16 +76,21 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         // Init with the first and last layers
         Init(netLayers[0], netLayers[^1]);
     }
+
+    public NeuralNetwork(int inputNodesCount, int outputNodesCount)
+    {
+        Init(inputNodesCount, outputNodesCount);
+    }
     #endregion
 
     #region Methods
-    public void Init(int inputNodesCount, int outputNodesCount)
+    public void Init(int inputNodesCount, int outputNodesCount, bool addBiasNode = true)
     {
-        int nodeId = 0;
+        int nodeId = 1;
         int connId = 0;
 
         // Create input nodes
-        for (int i = 0; i < inputNodesCount; i++)
+        for (int i = 1; i <= inputNodesCount; i++)
         {
             Node node = new(nodeId, Node.NodeType.Input);
             _nodes.Add(nodeId, node);
@@ -94,11 +99,14 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
         // Add an additional input node for bias
         Node biasNode = new(nodeId, Node.NodeType.Bias);
-        _nodes.Add(nodeId, biasNode);
-        nodeId++;
+        if (addBiasNode)
+        {
+            _nodes.Add(nodeId, biasNode);
+            nodeId++;
+        }
 
         // Create output nodes
-        for (int i = 0; i < outputNodesCount; i++)
+        for (int i = 1; i <= outputNodesCount; i++)
         {
             Node node = new(nodeId, Node.NodeType.Output);
             _nodes.Add(nodeId, node);
@@ -115,9 +123,9 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 {
                     if (otherNode.Type == Node.NodeType.Output)
                     {
+                        connId = thisNodeId * 100000 + otherNodeId;
                         Connection connection = new(connId, thisNodeId, otherNodeId, 0f, true, false);
-                        _connections.Add(connId, connection);
-                        _nodes[thisNodeId].Connections.Add(connId, connection);
+                        _connections.Add(connection.InnovationId, connection);
                     }
                 }
             }
@@ -135,14 +143,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public void EvaluateNode(Node node)
     {
-        foreach ((int innovationId, Connection connectionItem) in node.Connections)
-        {
-            if (connectionItem.Enabled)
-            {
-                _nodes[connectionItem.ToNodeId].Value += connectionItem.Weight * node.Value;
-            }
-            _nodes[connectionItem.ToNodeId].Value = System.MathF.Tanh(_nodes[connectionItem.ToNodeId].Value);
-        }
+        // If the node is an input or bias node, return
     }
 
     public Dictionary<int, Node> FeedForward(Dictionary<int, Node> inputValues)
@@ -190,7 +191,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         // Crossover nodes
         foreach ((int nodeId, Node nodeItem) in _nodes)
         {
-            nodeItem.Crossover(otherParent._nodes[nodeId]);
+            nodeItem.Copy(otherParent._nodes[nodeId]);
         }
 
         return this;
@@ -268,12 +269,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         Connection newConnection1 = new(newConnectionId1, _connections[connectionId].FromNodeId, newNodeId, _connections[connectionId].Weight, true, false);
         int newConnectionId2 = _connections.Count + 2;
         Connection newConnection2 = new(newConnectionId2, newNodeId, _connections[connectionId].ToNodeId, 1, true, false);
-
-        // Add new connections to nodes
-        _nodes[_connections[connectionId].FromNodeId].AddConnection(newConnection1);
-        newNode.AddConnection(newConnection1);
-        newNode.AddConnection(newConnection2);
-        _nodes[_connections[connectionId].ToNodeId].AddConnection(newConnection2);
 
         // Add new node to network
         _nodes.Add(newNodeId, newNode);
