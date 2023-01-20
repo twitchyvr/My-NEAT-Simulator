@@ -101,7 +101,6 @@ public class PopulationManager : MonoBehaviour
             agent.name = "Agent " + i;
             agent.GetComponent<HumanAgent>().Init();
             agent.GetComponent<HumanAgent>().MyManager = this;
-            agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork();
             agent.GetComponent<HumanAgent>().MyNumber = i;
             Agents.Add(agent);
         }
