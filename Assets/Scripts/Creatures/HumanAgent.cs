@@ -264,6 +264,9 @@ public class HumanAgent : MonoBehaviour, ICreature
         }
 
         Dictionary<int, Node> outputs = ProcessInputs();
+
+        // Find the first value in the output nodes
+
         BrainFitness = (outputs[0].Value + outputs[1].Value) / MyBrain.Nodes.Count;
         MyBrain.Fitness = BrainFitness;
 
