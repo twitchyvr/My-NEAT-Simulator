@@ -500,8 +500,8 @@ MonoBehaviour:
   _cam: {fileID: 0}
   AgentMoveAcceleration: 0
   AgentTurnTorque: 0
-  _moveMultiplier: 50
-  _turnMultiplier: 500
+  _moveMultiplier: 1
+  _turnMultiplier: 10
   _inputBias: 0.25
   MaxFoodDistance: 10
   MaxWallDistance: 10
