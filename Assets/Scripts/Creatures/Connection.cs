@@ -119,7 +119,7 @@ public class Connection
 
     public float Init()
     {
-        return Weight = UnityEngine.Random.Range(-1f, 1f);
+        return Weight = UnityEngine.Random.Range(-20f, 20f);
     }
 
     public void Mutate()
