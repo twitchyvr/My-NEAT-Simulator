@@ -25,10 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #region Usings
-//using System;
+using System;
 //using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 //using UnityEngine.AI;
 //using UnityEngine.UI;
@@ -41,18 +42,21 @@ using UnityEngine;
 /// <Summary>
 /// A HumanAgent is a type of creature.
 /// </Summary>
+[Serializable]
 public class HumanAgent : MonoBehaviour, ICreature
 {
     #region Settable Variables
     [SerializeField] Camera _cam;
     [Range(-1f, 1f)] public float AgentMoveAcceleration = 0f;
     [Range(-1f, 1f)] public float AgentTurnTorque = 0f;
-    [SerializeField][Range(0f, 100f)] private float _moveMultiplier = 50f;
-    [SerializeField][Range(0f, 1000f)] private float _turnMultiplier = 500f;
+    [SerializeField][Range(0.0001f, 100f)] private float _moveMultiplier = 50f;
+    [SerializeField][Range(0.0001f, 1000f)] private float _turnMultiplier = 500f;
+    [SerializeField][Range(0.0001f, 10f)] private float _energyMultiplier = 0.010f;
     [SerializeField][Range(0.0001f, 1f)] private float _inputBias = 0.25f;
     public float MaxFoodDistance = 5f;
     public float MaxWallDistance = 5f;
     public float BrainFitness = 0f;
+    public float AgentFitness = 0f;
     public float Age = 0;
     public float MaxAge = 100f;
     public float Health = 100f;
@@ -62,7 +66,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     public float MaxEnergy = 100f;
     public float MinEnergy = 0f;
     public PopulationManager MyManager;
-    public NeuralNetwork MyBrain { get { return _neuralNetwork; } set { _neuralNetwork = value; } }
+    public NeuralNetwork MyBrain;
     public int BrainInputNodesCount = 10;
     public int BrainOutputNodesCount = 4;
     public GameObject MyTarget;
@@ -72,10 +76,11 @@ public class HumanAgent : MonoBehaviour, ICreature
     #region Private Variables
     private Transform _transform;
     private Rigidbody _rigidbody;
-    private NeuralNetwork _neuralNetwork;
     private float _timeSinceBirth = 0f;
     private float _birthTime = 0f;
     private float _lastUpdateTime = 0f;
+    private int _speciesId = 0;
+    private Vector3 _startingPosition;
     #endregion
 
     #region Properties
@@ -87,7 +92,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     public float GetMaxEnergy { get { return MaxEnergy; } }
     public Transform GetTransform { get { return _transform; } }
     public Rigidbody GetRigidbody { get { return _rigidbody; } }
-    public NeuralNetwork GetNeuralNetwork { get { return _neuralNetwork; } }
+    public int SpeciesId { get { return _speciesId; } set { _speciesId = value; } }
     int ICreature.MyNumber { get { return MyNumber; } set { MyNumber = value; } }
     float ICreature.Age { get { return Age; } }
     float ICreature.Health { get { return Health; } }
@@ -106,6 +111,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     {
         _cam = _cam != null ? _cam : Camera.main;    // If a camera is not set here, use the default one.
         _transform = transform;                         // This will only be ran once
+        _startingPosition = _transform.position;
         _rigidbody = GetComponent<Rigidbody>();
         _birthTime = Time.time;
         _timeSinceBirth = 0f;
@@ -115,10 +121,12 @@ public class HumanAgent : MonoBehaviour, ICreature
     #region Loop
     protected void FixedUpdate()
     {
-        if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
-        {
-            Move(Input.GetAxis("Vertical"), Input.GetAxis("Horizontal"));
-        }
+
+        // Move the creature based on user input using horizontal and vertical axises
+        //f (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+        //{
+        //    Move(Input.GetAxis("Vertical"), Input.GetAxis("Horizontal"));
+        //}
 
         CreatureUpdate();
     }
@@ -212,8 +220,22 @@ public class HumanAgent : MonoBehaviour, ICreature
     /// <param name="t">The amount to turn.</param>
     public void Move(float a, float t)
     {
-        _transform.Translate(_moveMultiplier * a * Time.deltaTime * Vector3.forward);
-        _transform.Rotate(_turnMultiplier * t * Time.deltaTime * Vector3.up);
+        // If the creature is dead, do not move
+        if (isDead) return;
+
+
+        // Move in the direction the creature is facing, so that it looks like it is naturally moving forward in the direction it is facing at all times.  AddForce alone feels awkward.
+        // Using a better method than AddForce, such as AddRelativeForce, will cause the creature to drift sideways, which is not what we want.
+        _rigidbody.AddRelativeForce(_moveMultiplier * a * Vector3.forward, ForceMode.Acceleration);
+
+        //_rigidbody.AddForce(_moveMultiplier * a * _transform.forward, ForceMode.Acceleration);
+
+        // Turn the creature, without drifting sideways so that the creature moves in the direction it is facing
+        _rigidbody.AddRelativeTorque(_turnMultiplier * t * Vector3.up, ForceMode.Acceleration);
+        //_rigidbody.AddTorque(_turnMultiplier * t * _transform.up, ForceMode.Acceleration);
+
+        // Subtract a slight amount of energy based on the amount of movement
+        SubtractEnergy((Mathf.Abs(a) + Mathf.Abs(t)) * _energyMultiplier);
     }
 
     public void SetTarget(GameObject target)
@@ -233,7 +255,7 @@ public class HumanAgent : MonoBehaviour, ICreature
 
     public void SetNeuralNetwork(NeuralNetwork neuralNetwork)
     {
-        _neuralNetwork = neuralNetwork;
+        MyBrain = neuralNetwork;
     }
 
     public void CreatureUpdate()
@@ -257,19 +279,33 @@ public class HumanAgent : MonoBehaviour, ICreature
             Death();
         }
 
-        Dictionary<int, Node> outputs = ProcessInputs();
+        Node[] outputs = ProcessInputs();
+        MyBrain.RunTheNetwork();
 
         // Find the first value in the output nodes
-
-        if (outputs.ContainsKey(0) && outputs.ContainsKey(1))
+        BrainFitness = 0f;
+        AgentFitness = 0f;
+        // Count the number of output nodes, and add the value of each output node and then divide by the number of nodes to get the BrainFitness
+        foreach (Node node in outputs)
         {
-            BrainFitness = (outputs[0].Value + outputs[1].Value) / MyBrain.Nodes.Count;
-            MyBrain.Fitness = BrainFitness;
+            BrainFitness += node.Value;
+        }
 
+        BrainFitness /= outputs.Length;
+
+        // Add the fitness of the creature based on the distance from the starting position
+        AgentFitness += Vector3.Distance(_transform.position, _startingPosition);
+
+        // If the outputs array has a value for the first and second output nodes, then use those values to move the creature
+        if (outputs.Length > 0)
+        {
             AgentMoveAcceleration = outputs[0].Value;
             AgentTurnTorque = outputs[1].Value;
-            Move(AgentMoveAcceleration, AgentTurnTorque);
         }
+
+        MyBrain.Fitness = BrainFitness;
+
+        Move(AgentMoveAcceleration, AgentTurnTorque);
         _lastUpdateTime = Time.time;
     }
 
@@ -296,7 +332,12 @@ public class HumanAgent : MonoBehaviour, ICreature
                 Debug.Log("Creature " + myName + " died of old age.");
                 break;
         }
-        MyManager.Agents.Remove(this.gameObject);
+
+        // Add MyBrain to the MyManager.AgentNets array
+        NeuralNetwork[] temp = new NeuralNetwork[MyManager.AgentNets.Length + 1];
+        MyManager.AgentNets.CopyTo(temp, 0);
+        temp[MyManager.AgentNets.Length] = MyBrain;
+        MyManager.AgentNets = temp;
         Destroy(gameObject);
     }
 
@@ -314,20 +355,21 @@ public class HumanAgent : MonoBehaviour, ICreature
         }
     }
 
-    public Dictionary<int, Node> ProcessInputs()
+    public Node[] ProcessInputs()
     {
         // Get the inputs
         float[] inputs = new float[BrainInputNodesCount];
-        inputs[0] = _transform.position.x;  // x position sensor
-        inputs[1] = _transform.position.z;  // z position sensor
-        inputs[2] = 0;                      // food sensor
-        inputs[3] = 0;                      // wall sensor 1 forward+left
-        inputs[4] = 0;                      // wall sensor 2 forward+right
-        inputs[5] = GetEnergy;              // energy sensor
-        inputs[6] = GetHealth;              // health sensor
-        inputs[7] = GetAge;                 // age sensor
-        inputs[8] = BrainFitness;           // brain fitness sensor
-        inputs[9] = _inputBias;             // bias
+        inputs[0] = 0;                      // unused
+        inputs[1] = _transform.position.x;  // x position sensor
+        inputs[2] = _transform.position.z;  // z position sensor
+        inputs[3] = 0;                      // food sensor
+        inputs[4] = 0;                      // wall sensor 1 forward+left
+        inputs[5] = 0;                      // wall sensor 2 forward+right
+        inputs[6] = GetEnergy;              // energy sensor
+        inputs[7] = GetHealth;              // health sensor
+        inputs[8] = GetAge;                 // age sensor
+        inputs[9] = BrainFitness;           // brain fitness sensor
+        inputs[10] = _inputBias;             // bias
 
         Vector3 forward = _transform.forward;
         Vector3 right = _transform.right;
@@ -367,23 +409,41 @@ public class HumanAgent : MonoBehaviour, ICreature
             }
         }
 
-        // Store the inputs in a dictionary
-        Dictionary<int, Node> inputDictionary = new();
+        // Create a new Node array that is the same size as the inputs array
+        Node[] inputArray = new Node[inputs.Length];
         for (int i = 0; i < inputs.Length; i++)
         {
+            // If the input is the last one, it is the bias node
             if (i == inputs.Length - 1)
             {
-                inputDictionary.Add(i, new Node(i, Node.NodeType.Bias, 0, inputs[i]));
+                inputArray[i] = (new Node(i, Node.NodeType.Bias, 0, inputs[i]));
             }
+            // Otherwise, it is an input node
             else
             {
-                inputDictionary.Add(i, new Node(i, Node.NodeType.Input, 0, inputs[i]));
+                inputArray[i] = (new Node(i, Node.NodeType.Input, 0, inputs[i]));
             }
         }
 
-        // For each output node in the neural network, set the value to the output of the node
-        Dictionary<int, Node> outputs = _neuralNetwork.LoadInputs(inputDictionary);
-        return outputs;
+        // Load the inputs into the neural network's input nodes
+        Node[] inputNodesOutputValues = MyBrain.LoadInputs(inputArray);
+
+        return inputNodesOutputValues;
+    }
+
+    public void Save(string path)
+    {
+        using StreamWriter writer = new(path);
+
+        writer.Write(JsonUtility.ToJson(this, true));
+        writer.Close();
+    }
+
+    public void Load(string path)
+    {
+        using StreamReader reader = new(path);
+        JsonUtility.FromJsonOverwrite(reader.ReadToEnd(), this);
+        reader.Close();
     }
 
     #endregion
