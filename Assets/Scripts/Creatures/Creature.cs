@@ -25,7 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #region Usings
-//using System;
+using System;
+using System.IO;
 //using System.Linq;
 //using System.Collections;
 //using System.Collections.Generic;
@@ -38,6 +39,7 @@ using UnityEngine;
 //using UnityEngine.Serialization;
 #endregion
 
+[Serializable]
 public class Creature : MonoBehaviour
 {
     #region Properties
@@ -110,6 +112,36 @@ public class Creature : MonoBehaviour
         {
             Energy -= energy;
         }
+    }
+
+    public void Save(string path)
+    {
+        // Save the creature to a file
+        using StreamWriter writer = new(path);
+        writer.WriteLine(Age);
+        writer.WriteLine(Health);
+        writer.WriteLine(Energy);
+        writer.WriteLine(MaxAge);
+        writer.WriteLine(MinHealth);
+        writer.WriteLine(MaxHealth);
+        writer.WriteLine(MinEnergy);
+        writer.WriteLine(MaxEnergy);
+        writer.Close();
+    }
+
+    public void Load(string path)
+    {
+        // Load the creature from a file
+        using StreamReader reader = new(path);
+        Age = float.Parse(reader.ReadLine());
+        Health = float.Parse(reader.ReadLine());
+        Energy = float.Parse(reader.ReadLine());
+        MaxAge = float.Parse(reader.ReadLine());
+        MinHealth = float.Parse(reader.ReadLine());
+        MaxHealth = float.Parse(reader.ReadLine());
+        MinEnergy = float.Parse(reader.ReadLine());
+        MaxEnergy = float.Parse(reader.ReadLine());
+        reader.Close();
     }
     #endregion
 }
