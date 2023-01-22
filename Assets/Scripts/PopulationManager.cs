@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #region Usings
-//using System;
+using System;
 //using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -38,6 +38,7 @@ using UnityEngine;
 //using UnityEngine.Serialization;
 #endregion
 
+[Serializable]
 public class PopulationManager : MonoBehaviour
 {
 
@@ -48,13 +49,14 @@ public class PopulationManager : MonoBehaviour
     [SerializeField] private int _trialTime = 10;
     [SerializeField] private int _generation = 1;
     [SerializeField] private List<GameObject> _agents = new();
+    [SerializeField] private NeuralNetwork[] _agentNets = new NeuralNetwork[] { };
     [SerializeField] private bool _allAgentsDead = false;
     [SerializeField] private float _elapsedSinceLastBest = 0;
     [SerializeField] private float _timeBetweenBest = 5;
     [SerializeField] private int _bestGenome = 0;
     [SerializeField] private float _bestFitness = 0;
-    [SerializeField] private int _bestTime = 0;
-    [SerializeField] private int _bestDistance = 0;
+    [SerializeField] private float _bestTime = 0;
+    [SerializeField] private float _bestDistance = 0;
     [SerializeField] private int _bestScore = 0;
     [SerializeField] private int _bestGeneration = 0;
     [SerializeField] private int _bestTrial = 0;
@@ -72,13 +74,14 @@ public class PopulationManager : MonoBehaviour
     public int TrialTime { get => _trialTime; set => _trialTime = value; }
     public int Generation { get => _generation; set => _generation = value; }
     public List<GameObject> Agents { get => _agents; set => _agents = value; }
+    public NeuralNetwork[] AgentNets { get => _agentNets; set => _agentNets = value; }
     public bool AllAgentsDead { get => _allAgentsDead; set => _allAgentsDead = value; }
     public float ElapsedSinceLastBest { get => _elapsedSinceLastBest; set => _elapsedSinceLastBest = value; }
     public float TimeBetweenBest { get => _timeBetweenBest; set => _timeBetweenBest = value; }
     public int BestGenome { get => _bestGenome; set => _bestGenome = value; }
     public float BestFitness { get => _bestFitness; set => _bestFitness = value; }
-    public int BestTime { get => _bestTime; set => _bestTime = value; }
-    public int BestDistance { get => _bestDistance; set => _bestDistance = value; }
+    public float BestTime { get => _bestTime; set => _bestTime = value; }
+    public float BestDistance { get => _bestDistance; set => _bestDistance = value; }
     public int BestScore { get => _bestScore; set => _bestScore = value; }
     public int BestGeneration { get => _bestGeneration; set => _bestGeneration = value; }
     public int BestTrial { get => _bestTrial; set => _bestTrial = value; }
@@ -90,13 +93,10 @@ public class PopulationManager : MonoBehaviour
     #region Init
     protected void Start()
     {
-        // This method is used to initialize any variables or game state before the game starts.
-        // Start is called on the frame when a script is enabled just before any of the Update methods is called the first time.
-        // Start is called only once during the lifetime of the script instance.
         for (int i = 0; i < PopulationSize; i++)
         {
             Instance = this.gameObject;
-            Vector3 startingPos = new(this.transform.position.x + Random.Range(-2, 2), 0, this.transform.position.z + Random.Range(-2, 2));
+            Vector3 startingPos = new(this.transform.position.x + UnityEngine.Random.Range(-2, 2), 0, this.transform.position.z + UnityEngine.Random.Range(-2, 2));
             GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
             agent.name = "Agent " + i;
             agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork(agent.GetComponent<HumanAgent>().BrainInputNodesCount, agent.GetComponent<HumanAgent>().BrainOutputNodesCount);
@@ -129,7 +129,7 @@ public class PopulationManager : MonoBehaviour
     {
         if (AllAgentsDead)
         {
-            Repopulate();
+            Repopulate(false);
             Generation++;
         }
     }
@@ -137,19 +137,70 @@ public class PopulationManager : MonoBehaviour
     /// <summary>
     /// This method repopulates the population with new agents.
     /// </summary>
-    public void Repopulate()
+    public void Repopulate(bool useNewBrain = true)
     {
-        for (int i = 0; i < PopulationSize; i++)
+        Instance = this.gameObject;
+        Vector3 startingPos = new(this.transform.position.x + UnityEngine.Random.Range(-2, 2), 0, this.transform.position.z + UnityEngine.Random.Range(-2, 2));
+        GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
+
+        if (useNewBrain)
         {
-            Instance = this.gameObject;
-            Vector3 startingPos = new(this.transform.position.x + Random.Range(-2, 2), 0, this.transform.position.z + Random.Range(-2, 2));
-            GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
-            agent.name = "Agent " + i;
-            agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork(agent.GetComponent<HumanAgent>().BrainInputNodesCount, agent.GetComponent<HumanAgent>().BrainOutputNodesCount);
-            agent.GetComponent<HumanAgent>().MyManager = this;
-            agent.GetComponent<HumanAgent>().MyNumber = i;
-            Agents.Add(agent);
+            for (int i = 0; i < PopulationSize; i++)
+            {
+
+                agent.name = "Agent " + i;
+                agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork(agent.GetComponent<HumanAgent>().BrainInputNodesCount, agent.GetComponent<HumanAgent>().BrainOutputNodesCount);
+                agent.GetComponent<HumanAgent>().MyManager = this;
+                agent.GetComponent<HumanAgent>().MyNumber = i;
+                agent.GetComponent<HumanAgent>().MyBrain.SpeciesId = Generation;
+                Agents.Add(agent);
+            }
         }
+        else
+        {
+
+            NeuralNetwork bestAgent = new(agent.GetComponent<HumanAgent>().BrainInputNodesCount, agent.GetComponent<HumanAgent>().BrainOutputNodesCount);
+            // Get the best agent from the previous generation.
+            for (int i = 0; i < PopulationSize; i++)
+            {
+                AgentNets[i] = Agents[i].GetComponent<HumanAgent>().MyBrain;
+                if (AgentNets[i].Fitness > BestFitness)
+                {
+                    BestFitness = AgentNets[i].Fitness;
+                    BestGeneration = AgentNets[i].SpeciesId;
+                    bestAgent = AgentNets[i];
+                }
+            }
+
+            BestFitness = bestAgent.Fitness;
+            BestGeneration = bestAgent.SpeciesId;
+
+            for (int i = 0; i < AgentNets.Length; i++)
+            {
+                if (AgentNets[i].Fitness > bestAgent.Fitness)
+                {
+                    bestAgent = AgentNets[i];
+                }
+            }
+
+            // Save the best agent's brain to its own variable.
+            NeuralNetwork bestBrain = bestAgent;
+
+            // Record the best agent's fitness.
+            BestFitness = bestBrain.Fitness;
+
+            // Repopulate the population using the best brain.
+            for (int i = 0; i < PopulationSize; i++)
+            {
+                // Put the best brain in the agent.
+                agent.GetComponent<HumanAgent>().MyBrain = bestBrain;
+                agent.GetComponent<HumanAgent>().MyManager = this;
+                agent.GetComponent<HumanAgent>().MyNumber = i;
+                agent.GetComponent<HumanAgent>().MyBrain.SpeciesId = Generation;
+                Agents.Add(agent);
+            }
+        }
+        AllAgentsDead = false;
     }
 
     public void AgentSelected(GameObject agent)
@@ -166,6 +217,18 @@ public class PopulationManager : MonoBehaviour
                 total += agent.GetComponent<HumanAgent>().BrainFitness;
         }
         return total / Agents.Count;
+    }
+
+    void OnGUI()
+    {
+        GUI.Label(new Rect(210, 10, 200, 20), "Generation: " + Generation);
+        GUI.Label(new Rect(210, 30, 200, 20), "Best Fitness: " + BestFitness);
+        GUI.Label(new Rect(210, 50, 200, 20), "Best Generation: " + BestGeneration);
+        GUI.Label(new Rect(210, 70, 200, 20), "Best Trial: " + BestTrial);
+        GUI.Label(new Rect(210, 90, 200, 20), "Best Trial Time: " + BestTrialTime);
+        GUI.Label(new Rect(210, 110, 200, 20), "Best Time: " + BestTime);
+        GUI.Label(new Rect(210, 130, 200, 20), "Best Distance: " + BestDistance);
+        GUI.Label(new Rect(210, 150, 200, 20), "Best Score: " + BestScore);
     }
     #endregion
 }
