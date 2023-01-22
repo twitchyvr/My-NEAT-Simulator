@@ -39,17 +39,18 @@
 #endregion
 
 using System;
+using UnityEngine;
 
 [Serializable]
 public class Connection
 {
     #region Private Variables
-    private int innovationId = -1;
-    private int fromNodeId = -1;
-    private int toNodeId = -1;
-    private float weight = -1f;
-    private bool enabled = true;
-    private bool isRecurrent = false;
+    [SerializeField] private int innovationId = -1;
+    [SerializeField] private int fromNodeId = -1;
+    [SerializeField] private int toNodeId = -1;
+    [SerializeField] private float weight = -1f;
+    [SerializeField] private bool enabled = true;
+    [SerializeField] private bool isRecurrent = false;
     #endregion
 
     #region Properties
