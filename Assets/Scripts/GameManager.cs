@@ -82,7 +82,7 @@ public class GameManager : MonoBehaviour
         {
             SelectedCreature = GameObject.FindGameObjectsWithTag("Creature").OrderByDescending(x => x.GetComponent<HumanAgent>().MyBrain.Fitness).First();
         }
-        catch (Exception e)
+        catch (Exception)
         {
             SelectedCreature = null;
         }
@@ -204,6 +204,8 @@ public class GameManager : MonoBehaviour
                 foreach (var connection in creature.MyBrain.Connections)
                 {
                     if (connection == null) return;
+                    if (!connection.Enabled) return;
+                    if (!nodePositions.ContainsKey(connection.FromNodeId) || !nodePositions.ContainsKey(connection.ToNodeId)) return;
                     // Get the nodes from the Dictionary
                     Vector2 node1 = nodePositions[connection.FromNodeId];
                     Vector2 node2 = nodePositions[connection.ToNodeId];
@@ -215,7 +217,13 @@ public class GameManager : MonoBehaviour
 
                     // Draw the weight of the connection on the line
                     line.material.SetColor("_Color", Color.red);
+                    line.material.SetColor("_EmissionColor", Color.red);
+                    line.material.EnableKeyword("_EMISSION");
                     line.useWorldSpace = false;
+                    line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    line.receiveShadows = false;
+                    line.gameObject.layer = 0;
+                    line.material.renderQueue = 3000;
 
                     // Remove alpha transparency from the line
                     line.material.SetFloat("_Mode", 2);
