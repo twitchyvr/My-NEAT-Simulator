@@ -46,16 +46,13 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 {
 
     #region Settable Variables
-    public Dictionary<int, Node> Nodes { get { return _nodes; } }
-    public Dictionary<int, Connection> Connections { get { return _connections; } }
+    [SerializeField] public Node[] Nodes = new Node[] { }; //{ get { return _nodes; } }
+    [SerializeField] public Connection[] Connections = new Connection[] { }; // { get { return _connections; } }
+    [SerializeField] public int SpeciesId;
     #endregion
 
     #region Private Variables
-    //    private int[] _netLayers;
-    private Dictionary<int, Node> _nodes = new();
-    private Dictionary<int, Connection> _connections = new();
     private float _defaultBias = 0.25f;
-    private float _fitness;
     #endregion
 
     #region Properties
@@ -72,10 +69,13 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     #endregion
 
     #region Constructors
-    public NeuralNetwork(int[] netLayers = null)
+    public NeuralNetwork(int[] netLayers)
     {
-        // Init with the first and last layers
-        Initialize(netLayers[0], netLayers[^1]);
+        if (netLayers != null)
+        {
+            // Init with the first and last layers
+            Initialize(netLayers[0], netLayers[^1]);
+        }
     }
 
     public NeuralNetwork(int inputNodesCount, int outputNodesCount)
@@ -93,16 +93,28 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// <param name="addBiasNode">Whether to add a bias node (defaults to true)</param>
     public void Initialize(int inputNodesCount, int outputNodesCount, bool addBiasNode = true)
     {
+        // Loop through the input, bias, output, and hidden nodes and enters them into the array
+        // The bias node is always the last node in the input layer
+        // Hidden nodes get added later during the mutation phase
+        // Layer property of all nodes (except the input and bias nodes) get checked and are updated if needed
+        // Their location in the node array is always the same.
+
         int nodeId = 1;
         int connId = -1;
 
         // Create input nodes
         for (int i = 1; i <= inputNodesCount; i++)
         {
-            Node inNode = new(nodeId, Node.NodeType.Input);
-            inNode.Value = 0f;
-            inNode.NodeLayer = 1;
-            _nodes.Add(nodeId, inNode);
+            Node inNode = new(nodeId, Node.NodeType.Input)
+            {
+                Value = UnityEngine.Random.Range(-20f, 20f),
+                NodeLayer = 1
+            };
+            // Add the node to the array
+            Node[] tempNodes = Nodes;
+            Nodes = new Node[tempNodes.Length + 1];
+            Array.Copy(tempNodes, Nodes, tempNodes.Length);
+            Nodes[nodeId - 1] = inNode;
             nodeId++;
         }
 
@@ -112,38 +124,55 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         {
             biasNode.Value = _defaultBias;
             biasNode.NodeLayer = 1;
-            _nodes.Add(nodeId, biasNode);
+            Node[] tempNodes = Nodes;
+            Nodes = new Node[tempNodes.Length + 1];
+            Array.Copy(tempNodes, Nodes, tempNodes.Length);
+            Nodes[nodeId - 1] = biasNode;
             nodeId++;
         }
 
         // Create output nodes
         for (int i = 1; i <= outputNodesCount; i++)
         {
-            Node outNode = new(nodeId, Node.NodeType.Output);
-            outNode.Value = 0;
-            outNode.NodeLayer = 2;
-            _nodes.Add(nodeId, outNode);
+            Node outNode = new(nodeId, Node.NodeType.Output)
+            {
+                Value = 0,
+                NodeLayer = 2
+            };
+            Node[] tempNodes = Nodes;
+            Nodes = new Node[tempNodes.Length + 1];
+            Array.Copy(tempNodes, Nodes, tempNodes.Length);
+            Nodes[nodeId - 1] = outNode;
             nodeId++;
         }
 
         // Loop through all nodes and create connections
-        foreach ((int thisNodeId, Node thisNode) in _nodes)
+        foreach (Node thisNode in Nodes)
         {
             // If the node is an input or bias node, connect it to all output nodes
             if (thisNode.Type == Node.NodeType.Input || thisNode.Type == Node.NodeType.Bias)
             {
-                foreach ((int otherNodeId, Node otherNode) in _nodes)
+                // Loop through all output nodes
+                foreach (Node otherNode in Nodes)
                 {
+                    // If the node is an output node, create a connection
                     if (otherNode.Type == Node.NodeType.Output)
                     {
-                        connId = thisNodeId * 100000 + otherNodeId;
+                        // Create a connection
+                        connId = thisNode.Id * 100000 + otherNode.Id;
                         bool isEnabled = true;
+
+                        // 5% chance of disabling the connection
                         if (UnityEngine.Random.Range(1, 100) < 5)
                         {
                             isEnabled = false;
                         }
-                        Connection connection = new(connId, thisNodeId, otherNodeId, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
-                        _connections.Add(connection.InnovationId, connection);
+
+                        Connection connection = new(connId, thisNode.Id, otherNode.Id, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
+                        Connection[] tempConnections = Connections;
+                        Connections = new Connection[connId + 1];
+                        Array.Copy(tempConnections, Connections, tempConnections.Length);
+                        Connections[connId] = connection;
                     }
                 }
             }
@@ -156,33 +185,48 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     public void AddANode()
     {
         // Select a random connection
-        int connId = UnityEngine.Random.Range(1, _connections.Count);
+        int connId = UnityEngine.Random.Range(1, Connections.Length);
 
         // If the connection is already disabled, return
-        if (!_connections[connId].Enabled)
+        if (!Connections[connId].Enabled)
         {
             return;
         }
 
         // Disable the connection
-        _connections[connId].Enabled = false;
+        Connections[connId].Enabled = false;
 
         // Create a new node
-        int nodeId = _nodes.Count + 1;
-        Node newNode = new(nodeId, Node.NodeType.Hidden);
-        newNode.Value = 0;
-        newNode.NodeLayer = _nodes[_connections[connId].FromNodeId].NodeLayer + 1;
+        int nodeId = Nodes.Length + 1;
+        Node newNode = new(nodeId, Node.NodeType.Hidden)
+        {
+            Value = 0,
+            NodeLayer = Nodes[Connections[connId].FromNodeId].NodeLayer + 1
+        };
         // Add the new node to the network
-        _nodes.Add(nodeId, newNode);
+        Nodes[nodeId] = newNode;
 
         // Create two new connections
-        int connId1 = _connections[connId].FromNodeId * 100000 + nodeId;
-        int connId2 = nodeId * 100000 + _connections[connId].ToNodeId;
-        Connection newConn1 = new(connId1, _connections[connId].FromNodeId, nodeId, 1f, true, true);
-        Connection newConn2 = new(connId2, nodeId, _connections[connId].ToNodeId, _connections[connId].Weight, true, true);
-        // Add the new connections to the network
-        _connections.Add(connId1, newConn1);
-        _connections.Add(connId2, newConn2);
+        int connId1 = Connections[connId].FromNodeId * 100000 + nodeId;
+        int connId2 = nodeId * 100000 + Connections[connId].ToNodeId;
+        Connection newConn1 = new(connId1, Connections[connId].FromNodeId, nodeId, 1f, true, true);
+        Connection newConn2 = new(connId2, nodeId, Connections[connId].ToNodeId, Connections[connId].Weight, true, true);
+        // Add the new connections to the array, but first we need to add the new connections to the end of the array
+        Connection[] tempArray = new Connection[Connections.Length + 2];
+        Connections.CopyTo(tempArray, 0);
+        tempArray[Connections.Length] = newConn1;
+        tempArray[Connections.Length + 1] = newConn2;
+        Connections = tempArray;
+
+        // Update the layer property of all nodes
+        foreach (Node node in Nodes)
+        {
+            if (node.Id == Connections[connId].FromNodeId)
+            {
+                node.NodeLayer = Nodes[Connections[connId].FromNodeId].NodeLayer + 1;
+            }
+        }
+
     }
 
     /// <summary>
@@ -191,29 +235,32 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     public void AddAConnection()
     {
         // Select two random nodes
-        int node1 = UnityEngine.Random.Range(1, _nodes.Count);
-        int node2 = UnityEngine.Random.Range(1, _nodes.Count);
+        int node1 = UnityEngine.Random.Range(1, Nodes.Length);
+        int node2 = UnityEngine.Random.Range(1, Nodes.Length);
 
-        // If the connection already exists, return
-        if (_connections.ContainsKey(node1 * 100000 + node2))
+        // If the connection already exists in the array, then return
+        foreach (Connection conn in Connections)
         {
-            return;
+            if (conn.FromNodeId == node1 && conn.ToNodeId == node2)
+            {
+                return;
+            }
         }
 
         // If the connection is from an input node to an output node, return
-        if (_nodes[node1].Type == Node.NodeType.Input && _nodes[node2].Type == Node.NodeType.Output)
+        if (Nodes[node1].Type == Node.NodeType.Input && Nodes[node2].Type == Node.NodeType.Output)
         {
             return;
         }
 
         // If the connection is from a bias node to an output node, return
-        if (_nodes[node1].Type == Node.NodeType.Bias && _nodes[node2].Type == Node.NodeType.Output)
+        if (Nodes[node1].Type == Node.NodeType.Bias && Nodes[node2].Type == Node.NodeType.Output)
         {
             return;
         }
 
         // If the connection is from an input node to a hidden node, create the connection
-        if (_nodes[node1].Type == Node.NodeType.Input && _nodes[node2].Type == Node.NodeType.Hidden)
+        if (Nodes[node1].Type == Node.NodeType.Input && Nodes[node2].Type == Node.NodeType.Hidden)
         {
             int connId = node1 * 100000 + node2;
             bool isEnabled = true;
@@ -222,11 +269,11 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 isEnabled = false;
             }
             Connection connection = new(connId, node1, node2, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
-            _connections.Add(connection.InnovationId, connection);
+            Connections[connId] = connection;
         }
 
         // If the connection is from a hidden node to an output node, create the connection
-        if (_nodes[node1].Type == Node.NodeType.Hidden && _nodes[node2].Type == Node.NodeType.Output)
+        if (Nodes[node1].Type == Node.NodeType.Hidden && Nodes[node2].Type == Node.NodeType.Output)
         {
             int connId = node1 * 100000 + node2;
             bool isEnabled = true;
@@ -235,11 +282,11 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 isEnabled = false;
             }
             Connection connection = new(connId, node1, node2, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
-            _connections.Add(connection.InnovationId, connection);
+            Connections[connId] = connection;
         }
 
         // If the connection is from a hidden node to a hidden node on a different layer, create the connection
-        if (_nodes[node1].Type == Node.NodeType.Hidden && _nodes[node2].Type == Node.NodeType.Hidden && _nodes[node1].NodeLayer != _nodes[node2].NodeLayer)
+        if (Nodes[node1].Type == Node.NodeType.Hidden && Nodes[node2].Type == Node.NodeType.Hidden && Nodes[node1].NodeLayer != Nodes[node2].NodeLayer)
         {
             int connId = node1 * 100000 + node2;
             bool isEnabled = true;
@@ -248,25 +295,22 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 isEnabled = false;
             }
             Connection connection = new(connId, node1, node2, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
-            _connections.Add(connection.InnovationId, connection);
+            Connections[connId] = connection;
         }
 
         // If the connection is from a hidden node to a hidden node on the same layer, and the connection is already enabled, disable it
-        if (_nodes[node1].Type == Node.NodeType.Hidden && _nodes[node2].Type == Node.NodeType.Hidden && _nodes[node1].NodeLayer == _nodes[node2].NodeLayer)
+        if (Nodes[node1].Type == Node.NodeType.Hidden && Nodes[node2].Type == Node.NodeType.Hidden && Nodes[node1].NodeLayer == Nodes[node2].NodeLayer)
         {
             int connId = node1 * 100000 + node2;
-            if (_connections.ContainsKey(connId))
+
+            foreach (Connection conn in Connections)
             {
-                if (_connections[connId].Enabled)
+                if (conn.FromNodeId == connId)
                 {
-                    _connections[connId].Enabled = false;
+                    conn.Enabled = false;
                 }
             }
         }
-
-
-
-
     }
 
     /// <summary>
@@ -275,7 +319,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     public void Mutate()
     {
         // Loop through all connections
-        foreach ((int connId, Connection conn) in _connections)
+        foreach (Connection conn in Connections)
         {
             // If the connection is enabled, randomly disable it
             if (conn.Enabled)
@@ -315,7 +359,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         }
 
         // Loop through all nodes
-        foreach ((int nodeId, Node node) in _nodes)
+        foreach (Node node in Nodes)
         {
             // If the node is a bias node, randomly change the bias value
             if (node.Type == Node.NodeType.Bias)
@@ -334,18 +378,36 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// </summary>
     /// <param name="inputs">The inputs to load into the network </param>
     /// <returns>The inputs loaded into the network</returns>
-    public Dictionary<int, Node> LoadInputs(Dictionary<int, Node> inputs)
+    public Node[] LoadInputs(Node[] inputs)
     {
         // Load the inputs into the input nodes
-        foreach ((int nodeId, Node node) in inputs)
+        foreach (Node inputNode in inputs)
         {
-            if (_nodes.ContainsKey(nodeId))
-                _nodes[nodeId].Value = node.Value;
+            // If the node exists, set the value
+            foreach (Node thisNode in Nodes)
+            {
+                if (thisNode.Id == inputNode.Id && (Nodes[inputNode.Id].Type == Node.NodeType.Input || Nodes[inputNode.Id].Type == Node.NodeType.Bias))
+                {
+                    thisNode.Value = inputNode.Value;
+                }
+            }
         }
 
-        RunTheNetwork();
+        Node[] inputNodes = new Node[] { };
+        for (int i = 0; i < Nodes.Length; i++)
+        {
+            Node node = Nodes[i];
+            // If the node is an input node, add it to the input node array
+            if (node.Type == Node.NodeType.Input || node.Type == Node.NodeType.Bias)
+            {
+                // Add the node to the input node array and resize the array
+                Array.Resize(ref inputNodes, inputNodes.Length + 1);
+                inputNodes[^1] = node;
+            }
+        }
 
-        return _nodes;
+        // Return the output nodes
+        return inputNodes;
     }
 
     /// <summary>
@@ -353,97 +415,144 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// </summary>
     public void RunTheNetwork()
     {
-        if (_nodes.Count == 0)
-            return;
+        // Propagate the values through the network to the output nodes
+        // This works by starting at layer 2, then scanning through the node array
+        // looking for nodes which have been placed in this layer.
 
-        // Loop through all nodes
-        foreach ((int nodeId, Node node) in _nodes)
+        // When it finds one, it sets its input to zero, then it scans through the connection array
+        // looking for connections that terminate at this node
+
+        // When it finds one, it checks to see where that connection originated, and grabs the output value from that node,
+        // multiplies it by the connection weight and adds the result to the input value of the target node
+
+        // Then it continues scanning through the connection array looking for more connections that terminate at this node
+        // and repeats the process until it gets to the end.
+
+        // This approach captures all the connections going to that node, and once the input is known, we apply the activation function
+        // and use the return value to populate the output value of the node.
+
+        // Then goes back to scanning through the node array looking for nodes in the next layer, and repeats the process until it gets to the end.
+        // This approach is a little more efficient than the approach used in the original NEAT paper, but it is functionally equivalent.
+
+        int _maxLayer = 0;
+        // Find the maximum layer
+        for (int i = 0; i < Nodes.Length; i++)
         {
-            // If the node is an input node, do nothing
-            if (node.Type == Node.NodeType.Input)
-                continue;
-
-            // If the node is a bias node, do nothing
-            if (node.Type == Node.NodeType.Bias)
-                continue;
-
-            // If the node is an output node, calculate the output value
-            if (node.Type == Node.NodeType.Output)
+            if (Nodes[i].NodeLayer > _maxLayer)
             {
-                node.Value = GetOutputs(nodeId);
-            }
-
-            // If the node is a hidden node, calculate the output value
-            if (node.Type == Node.NodeType.Hidden)
-            {
-                node.Value = GetOutputs(nodeId);
+                _maxLayer = Nodes[i].NodeLayer;
             }
         }
+
+        // Loop through all layers starting at layer 2
+        for (int layer = 2; layer <= _maxLayer; layer++)
+        {
+            // Loop through all nodes
+            foreach (Node node in Nodes)
+            {
+                // If the node is in the current layer, set the node's value to zero
+                if (node.NodeLayer == layer)
+                {
+                    node.Value = 0;
+                }
+
+                // If the node is in the current layer, loop through all connections
+                if (node.NodeLayer == layer)
+                {
+                    foreach (Connection connection in Connections)
+                    {
+                        // If the connection is enabled, and the connection's input node is the node we are looking for, add the connection's weight to the node's value
+                        if (connection.Enabled && connection.FromNodeId == node.Id)
+                        {
+                            node.Value += Nodes[connection.FromNodeId].Value * connection.Weight;
+                        }
+                    }
+                }
+
+                // If the node is in the current layer, apply the activation function to the node's value
+                if (node.NodeLayer == layer)
+                {
+                    node.Value = ActivationFunction(node.Value);
+                }
+            }
+        }
+
     }
 
     /// <summary>
-    /// This method will get the outputs from the network
+    /// This method will give the output value from a specified node.
     /// </summary>
-    public float GetOutputs(int nodeId)
+    /// <param name="nodeId">The node ID to get the output value from</param>
+    /// <returns>The output value from the specified node</returns>
+    public float GetOutput(int pathNodeId)
     {
         // Loop through all connections
-        foreach ((int connectionId, Connection connection) in _connections)
+        foreach (Connection connection in Connections)
         {
             // If the connection is enabled, and the connection's input node is the node we are looking for, add the connection's weight to the node's value
-            if (connection.Enabled && connection.FromNodeId == nodeId)
+            if (connection.Enabled && connection.FromNodeId == pathNodeId)
             {
-                _nodes[nodeId].Value += _nodes[connection.FromNodeId].Value * connection.Weight;
+                Nodes[pathNodeId].Value += Nodes[connection.FromNodeId].Value * connection.Weight;
             }
         }
 
         // Return the node's value
-        return _nodes[nodeId].Value;
+        return Nodes[pathNodeId].Value;
     }
 
-    public void DisplayNetworkOnGui()
+    /// <summary>
+    /// The Sigmoid function
+    /// </summary>
+    /// <param name="x">The value to pass through the Sigmoid function</param>
+    /// <returns>The result of the Sigmoid function (a float between 0 and 1)</returns>
+    public float Sigmoid(float x)
     {
-        // 1. Create a list of nodes, sorted by their layer
-        // 2. Position squares that represent the nodes on the GUI, based on their layer
-        // 3. Display the nodes on the GUI as small squares
-        // 4. Display the connections on the GUI as lines
-        // 5. Display the node values on the GUI as small text
-        // 6. Display the connection weights on the GUI as small text
-
-        // Create a list of nodes, sorted by their layer
-        List<Node> nodes = _nodes.Values.OrderBy(x => x.NodeLayer).ToList();
-
-        // Loop through all nodes
-        for (int i = 0; i < nodes.Count; i++)
-        {
-            // Display the nodes on the GUI as small squares
-            GUI.Box(new Rect(100 + (i * 100), 100 + (nodes[i].NodeLayer * 100), 50, 50), nodes[i].Value.ToString());
-
-            // Display the node values on the GUI as small text
-            GUI.Label(new Rect(100 + (i * 100), 100 + (nodes[i].NodeLayer * 100), 50, 50), nodes[i].Value.ToString());
-        }
-
-        // Loop through all connections
-        foreach ((int connectionId, Connection connection) in _connections)
-        {
-            // If the connection is enabled, display the connection on the GUI as a line
-            if (connection.Enabled)
-            {
-                // Get the node that the connection is coming from
-                Node fromNode = _nodes[connection.FromNodeId];
-
-                // Get the node that the connection is going to
-                Node toNode = _nodes[connection.ToNodeId];
-
-                // Display the connection on the GUI as a line
-                GUI.Box(new Rect(100 + (fromNode.NodeLayer * 100), 100 + (fromNode.NodeLayer * 100), 50, 50), "");
-                GUI.Box(new Rect(100 + (toNode.NodeLayer * 100), 100 + (toNode.NodeLayer * 100), 50, 50), "");
-
-                // Display the connection weights on the GUI as small text
-                GUI.Label(new Rect(100 + (fromNode.NodeLayer * 100), 100 + (fromNode.NodeLayer * 100), 50, 50), connection.Weight.ToString());
-            }
-        }
-
-
+        // Sigmoid function with a range of 0 to 1
+        return (float)(1 / (1 + Math.Exp(-4.9 * x)));
     }
+
+    /// <summary>
+    /// The Tanh function
+    /// </summary>
+    /// <param name="x">The value to pass through the Tanh function</param>
+    /// <returns>The result of the Tanh function (a float between -1 and 1)</returns>
+    public float Tanh(float x)
+    {
+        // Tanh function with a range of -1 to 1
+        return (float)Math.Tanh(x);
+    }
+
+    /// <summary>
+    /// The ActivationFunction method will return the result of the activation function
+    /// </summary>
+    /// <param name="x">The value to pass through the activation function</param>
+    /// <param name="useSigmoid">If true, the Sigmoid function will be used. If false, the Tanh function will be used.</param>
+    /// <returns>The result of the activation function</returns>
+    public float ActivationFunction(float x, bool useSigmoid = false)
+    {
+        if (useSigmoid)
+        {
+            return Sigmoid(x);
+        }
+        else
+        {
+            return Tanh(x);
+        }
+    }
+
+    public void Save(string path)
+    {
+        using StreamWriter writer = new(path);
+        writer.Write(JsonUtility.ToJson(this, true));
+        writer.Close();
+    }
+
+    public void Load(string path)
+    {
+        using StreamReader reader = new(path);
+        JsonUtility.FromJsonOverwrite(reader.ReadToEnd(), this);
+        reader.Close();
+    }
+
     #endregion
 }
