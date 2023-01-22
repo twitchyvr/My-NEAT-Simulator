@@ -433,9 +433,20 @@ public class HumanAgent : MonoBehaviour, ICreature
 
     public void Save(string path)
     {
+        string jsonString = JsonUtility.ToJson(MyBrain);
         using StreamWriter writer = new(path);
-
-        writer.Write(JsonUtility.ToJson(this, true));
+        foreach (Node node in MyBrain.Nodes)
+        {
+            if (node.Value != 0)
+                jsonString += JsonUtility.ToJson(node);
+        }
+        foreach (Connection connection in MyBrain.Connections)
+        {
+            if (connection.Weight != 0)
+                jsonString += JsonUtility.ToJson(connection);
+        }
+        //
+        writer.Write(jsonString);
         writer.Close();
     }
 
