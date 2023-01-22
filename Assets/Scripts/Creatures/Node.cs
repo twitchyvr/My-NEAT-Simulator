@@ -29,6 +29,7 @@ using System;
 //using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 //using UnityEngine;
 //using UnityEngine.AI;
 //using UnityEngine.UI;
@@ -43,16 +44,14 @@ public class Node
 {
 
     #region Private Variables
-    private int _id = 0;
-    private float _value = -1;  // The value of this node
-
-    private NodeType _type;
-    private float _inputSum = 0;
-    private float _outputSum = 0;
-    private int _nodeLayer = 0;
-    private float _desiredValue = 0;
-
-    private bool _enabled = false;
+    [SerializeField] private int _id = 0;
+    [SerializeField] private float _value = -1;  // The value of this node
+    [SerializeField] private NodeType _type;
+    [SerializeField] private float _inputSum = 0;
+    [SerializeField] private float _outputSum = 0;
+    [SerializeField] private int _nodeLayer = 0;
+    [SerializeField] private float _desiredValue = 0;
+    [SerializeField] private bool _enabled = false;
     #endregion
 
     #region Properties
