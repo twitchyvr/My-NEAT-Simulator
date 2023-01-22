@@ -450,28 +450,25 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
             // Loop through all nodes
             foreach (Node node in Nodes)
             {
-                // If the node is in the current layer, set the node's value to zero
+                // If the node is in the current layer (starting at layer 2)
+                // Set the node's value to zero
                 if (node.NodeLayer == layer)
                 {
                     node.Value = 0;
-                }
 
-                // If the node is in the current layer, loop through all connections
-                if (node.NodeLayer == layer)
-                {
+                    // Then, loop through all connections
                     foreach (Connection connection in Connections)
                     {
+                        if (connection == null) return;
+
                         // If the connection is enabled, and the connection's input node is the node we are looking for, add the connection's weight to the node's value
                         if (connection.Enabled && connection.FromNodeId == node.Id)
                         {
                             node.Value += Nodes[connection.FromNodeId].Value * connection.Weight;
                         }
                     }
-                }
 
-                // If the node is in the current layer, apply the activation function to the node's value
-                if (node.NodeLayer == layer)
-                {
+                    // Next, apply the activation function to the node's value
                     node.Value = ActivationFunction(node.Value);
                 }
             }
