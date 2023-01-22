@@ -76,30 +76,34 @@ public class GameManager : MonoBehaviour
         {
             GetCreatureInfo();
         }
-        if (SelectedCreature != null)
+
+        // Automatically select the creature with the highest fitness.
+        try
         {
-            if (SelectedCreature.TryGetComponent(out HumanAgent creature))
-            {
-                CreatureName = SelectedCreature.name;
-                CreatureHealth = creature.Health;
-                CreatureAge = creature.Age;
-                CreatureEnergy = creature.Energy;
-            }
+            SelectedCreature = GameObject.FindGameObjectsWithTag("Creature").OrderByDescending(x => x.GetComponent<HumanAgent>().MyBrain.Fitness).First();
+        }
+        catch (Exception e)
+        {
+            SelectedCreature = null;
+        }
+        if (SelectedCreature == null) return;
+
+        SelectedCreature.GetComponent<HumanAgent>().MyManager.AgentSelected(SelectedCreature);
+        if (SelectedCreature.TryGetComponent(out HumanAgent creature))
+        {
+            CreatureName = SelectedCreature.name;
+            CreatureHealth = creature.Health;
+            CreatureAge = creature.Age;
+            CreatureEnergy = creature.Energy;
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (SelectedCreature != null)
-            {
-                if (SelectedCreature.TryGetComponent(out HumanAgent creature))
-                {
-                    SelectedCreature.GetComponent<HumanAgent>().Save(creature.name + "-CreatureSave.json");
-                    Debug.Log("Saved Creature: " + creature.name + " to file: " + creature.name + "-CreatureSave.json");
+            SelectedCreature.GetComponent<HumanAgent>().Save(creature.name + "-CreatureSave.json");
+            Debug.Log("Saved Creature: " + creature.name + " to file: " + creature.name + "-CreatureSave.json");
 
-                    //SelectedCreature.GetComponent<HumanAgent>().MyBrain.Save(creature.name + "-BrainSave.json");
-                    //Debug.Log("Saved Brain " + creature.name + " to file: " + creature.name + "-BrainSave.json");
-                }
-            }
+            //SelectedCreature.GetComponent<HumanAgent>().MyBrain.Save(creature.name + "-BrainSave.json");
+            //Debug.Log("Saved Brain " + creature.name + " to file: " + creature.name + "-BrainSave.json");
         }
     }
 
@@ -194,15 +198,18 @@ public class GameManager : MonoBehaviour
                     // reset nodePos to 15 after each layer
                 }
 
+                LineRenderer line = Canvas.GetComponent<LineRenderer>();
+
                 // Look at each connection, and determine which nodes it connects
                 foreach (var connection in creature.MyBrain.Connections)
                 {
+                    if (connection == null) return;
                     // Get the nodes from the Dictionary
                     Vector2 node1 = nodePositions[connection.FromNodeId];
                     Vector2 node2 = nodePositions[connection.ToNodeId];
                     // Draw a line between the nodes
-                    LineRenderer line = Canvas.GetComponent<LineRenderer>();
-                    line.SetPositions(new Vector3[] { node1, new Vector3(), node2 });
+                    line.SetPosition(0, node1);
+                    line.SetPosition(1, node2);
                     line.startWidth = 1f;
                     line.endWidth = 1f;
 
@@ -221,8 +228,8 @@ public class GameManager : MonoBehaviour
     {
         // Save the HumanAgent creature to a file
         using StreamWriter writer = new(path);
-        writer.WriteLine(JsonUtility.ToJson(SelectedCreature.GetComponent<HumanAgent>()));
-
+        writer.WriteLine(JsonUtility.ToJson(SelectedCreature));
+        writer.Close();
     }
     #endregion
     #region Methods
