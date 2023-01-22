@@ -25,10 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #region Usings
-//using System;
+using System;
 //using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEngine;
 //using UnityEngine.AI;
 //using UnityEngine.UI;
@@ -41,18 +43,20 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public Texture NodeTexture;
     public static bool IsPaused = false;
     public GameObject SelectedCreature;
-    //    public GameObject CreatureInfoPanel;
     public GameObject FoodPrefab;
+    public GameObject Canvas;
     public float FoodSpawnMaxX = 80;
     public float FoodSpawnMaxZ = 80f;
+    public int CreatureSpeciesId = 0;
+    public float CreatureBrainFitness = 0f;
+    public float CreatureAgentFitness = 0f;
     public int FoodCount = 10;
-    float CreatureHealth = 0f;
-    float CreatureAge = 0f;
-    float CreatureEnergy = 0f;
-    string CreatureName = "";
+    public float CreatureHealth = 0f;
+    public float CreatureAge = 0f;
+    public float CreatureEnergy = 0f;
+    public string CreatureName = "";
 
     #region Init
     protected void Awake()
@@ -60,7 +64,7 @@ public class GameManager : MonoBehaviour
         // Instantiate food prefabs around the map randomly within a specific x and z range.
         for (int i = 0; i < FoodCount; i++)
         {
-            Instantiate(FoodPrefab, new Vector3(Random.Range(-FoodSpawnMaxX, FoodSpawnMaxX), 0, Random.Range(-FoodSpawnMaxZ, FoodSpawnMaxZ)), Quaternion.identity);
+            Instantiate(FoodPrefab, new Vector3(UnityEngine.Random.Range(-FoodSpawnMaxX, FoodSpawnMaxX), 0, UnityEngine.Random.Range(-FoodSpawnMaxZ, FoodSpawnMaxZ)), Quaternion.identity);
         }
     }
     #endregion
@@ -80,6 +84,21 @@ public class GameManager : MonoBehaviour
                 CreatureHealth = creature.Health;
                 CreatureAge = creature.Age;
                 CreatureEnergy = creature.Energy;
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (SelectedCreature != null)
+            {
+                if (SelectedCreature.TryGetComponent(out HumanAgent creature))
+                {
+                    SelectedCreature.GetComponent<HumanAgent>().Save(creature.name + "-CreatureSave.json");
+                    Debug.Log("Saved Creature: " + creature.name + " to file: " + creature.name + "-CreatureSave.json");
+
+                    //SelectedCreature.GetComponent<HumanAgent>().MyBrain.Save(creature.name + "-BrainSave.json");
+                    //Debug.Log("Saved Brain " + creature.name + " to file: " + creature.name + "-BrainSave.json");
+                }
             }
         }
     }
@@ -105,6 +124,9 @@ public class GameManager : MonoBehaviour
                     CreatureHealth = creature.Health;
                     CreatureAge = creature.Age;
                     CreatureEnergy = creature.Energy;
+                    CreatureSpeciesId = creature.SpeciesId;
+                    CreatureBrainFitness = creature.MyBrain.Fitness;
+                    CreatureAgentFitness = creature.AgentFitness;
                 }
             }
         }
@@ -116,24 +138,92 @@ public class GameManager : MonoBehaviour
         GUI.Label(new Rect(10, 25, 300, 20), $"Health: {CreatureHealth}");
         GUI.Label(new Rect(10, 40, 300, 20), $"Age: {CreatureAge}");
         GUI.Label(new Rect(10, 55, 300, 20), $"Energy: {CreatureEnergy}");
-        int nodePos = 85;
+        GUI.Label(new Rect(10, 70, 300, 20), $"Species: {CreatureSpeciesId}");
+        GUI.Label(new Rect(10, 85, 300, 20), $"BrainFitness: {CreatureBrainFitness}");
+        GUI.Label(new Rect(10, 100, 300, 20), $"AgentFitness: {CreatureAgentFitness}");
+        int nodePos = 115;
         // Show the selected creature's nodes and connections.
         if (SelectedCreature != null)
         {
             if (SelectedCreature.TryGetComponent(out HumanAgent creature))
             {
-                foreach ((int currentNodeId, Node currentNode) in creature.MyBrain.Nodes)
+                // 1. Create a list of nodes, sorted by their layer
+                // 2. Create and position small squares that represent the nodes on the GUI, based on their layer.
+                // 3. The input nodes are on the left, and the lowest number starts on top.
+                // 4. The output nodes are on the right, and the lowest number starts on top.
+                // 5. The bias node is at the bottom of the row of input nodes.
+                // 6. The hidden nodes are in the middle, and the lowest number starts on top.
+                // 7. Display the values of the nodes on the GUI next to the node squares without overlapping.
+                // 8. Display the connections on the GUI as lines
+                // 9. Display the node values on the GUI as small text
+                // 10. Display the connection weights on the GUI as small text
+
+
+                // Check how many layers and how many nodes per layer we have
+                // Create a list of nodes, sorted by their layer
+                // Layers define how many columns are needed on the canvas, and the nodes per layer define how many rows are needed on the column
+                // Create a 2D array of nodes
+                // Create a 2D array of connection lines
+
+                // Define how many columns we need on the canvas based on the contents of their node and connection arrays
+                // Check how many layers and how many nodes per layer we have
+                // Define how many columns we need on the canvas, and how many rows we need in each column
+                // Then we use that information to position and draw the nodes on the screen, and label them
+                // Then we go through the connection array and draw the lines between the nodes - and color code them for clarity
+                // We do not want to normally display disabled connections but the option to do so should be available
+
+                int currentLayerNumber = 0;
+                int currentLayerWidth = 300;
+                Dictionary<int, Vector3> nodePositions = new();
+                foreach (var node in creature.MyBrain.Nodes)
                 {
-                    GUI.Label(new Rect(10, nodePos, 300, 20), $"Node: {currentNode.Id} - Value: {currentNode.Value}");
+                    if (currentLayerNumber != node.NodeLayer)
+                    {
+                        int oldLayerNum = currentLayerNumber;
+                        nodePos = 15;
+                        currentLayerWidth -= 100;
+                        currentLayerNumber = node.NodeLayer;
+                    }
+                    // Draw the node, based on its layer and the position within its layer, then label it with the Id.
+                    GUI.Label(new Rect(Screen.width - currentLayerWidth, nodePos, 300, 20), $"N{node.Id}");
+                    // Draw a 5x5 square at the position of the node
+                    GUI.Box(new Rect(Screen.width - currentLayerWidth - 5, nodePos + 8, 5, 5), "");
+                    // Add the node to the dictionary
+                    nodePositions.Add(node.Id, new Vector3(Screen.width - currentLayerWidth - 2, 0, nodePos + 4));
                     nodePos += 15;
+                    // reset nodePos to 15 after each layer
+                }
 
-                    // Show the connections for the current node.
+                // Look at each connection, and determine which nodes it connects
+                foreach (var connection in creature.MyBrain.Connections)
+                {
+                    // Get the nodes from the Dictionary
+                    Vector2 node1 = nodePositions[connection.FromNodeId];
+                    Vector2 node2 = nodePositions[connection.ToNodeId];
+                    // Draw a line between the nodes
+                    LineRenderer line = Canvas.GetComponent<LineRenderer>();
+                    line.SetPositions(new Vector3[] { node1, new Vector3(), node2 });
+                    line.startWidth = 1f;
+                    line.endWidth = 1f;
 
+                    // Draw the weight of the connection on the line
+                    line.material.SetColor("_Color", Color.red);
+                    line.useWorldSpace = false;
+
+                    // Remove alpha transparency from the line
+                    line.material.SetFloat("_Mode", 2);
                 }
             }
         }
     }
 
+    public void Save(string path)
+    {
+        // Save the HumanAgent creature to a file
+        using StreamWriter writer = new(path);
+        writer.WriteLine(JsonUtility.ToJson(SelectedCreature.GetComponent<HumanAgent>()));
+
+    }
     #endregion
     #region Methods
     // Your custom methods go here
