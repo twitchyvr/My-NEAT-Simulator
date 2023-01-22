@@ -477,9 +477,9 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7689993811997631971}
   serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0.1
-  m_AngularDrag: 0.05
+  m_Mass: 10
+  m_Drag: 5
+  m_AngularDrag: 5
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
@@ -500,12 +500,14 @@ MonoBehaviour:
   _cam: {fileID: 0}
   AgentMoveAcceleration: 0
   AgentTurnTorque: 0
-  _moveMultiplier: 1
-  _turnMultiplier: 10
+  _moveMultiplier: 50
+  _turnMultiplier: 50
+  _energyMultiplier: 0.005
   _inputBias: 0.25
   MaxFoodDistance: 10
   MaxWallDistance: 10
   BrainFitness: 0
+  AgentFitness: 0
   Age: 0
   MaxAge: 100
   Health: 10
@@ -515,7 +517,7 @@ MonoBehaviour:
   MaxEnergy: 10
   MinEnergy: 0
   MyManager: {fileID: 585850378456658182, guid: 339693f2cd522444c9406a168eb44aa8, type: 3}
-  BrainInputNodesCount: 10
+  BrainInputNodesCount: 11
   BrainOutputNodesCount: 4
   MyTarget: {fileID: 6855806191119263013, guid: 1ef31a2125f734765844574bff19277d, type: 3}
   MyNumber: 0
