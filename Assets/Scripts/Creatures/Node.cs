@@ -99,6 +99,7 @@ public class Node
     #endregion
 
     #region Enums
+    [SerializeField]
     public enum NodeType
     {
         Input,
