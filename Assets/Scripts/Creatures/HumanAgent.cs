@@ -123,7 +123,7 @@ public class HumanAgent : MonoBehaviour, ICreature
     {
 
         // Move the creature based on user input using horizontal and vertical axises
-        //f (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+        //if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
         //{
         //    Move(Input.GetAxis("Vertical"), Input.GetAxis("Horizontal"));
         //}
@@ -167,6 +167,10 @@ public class HumanAgent : MonoBehaviour, ICreature
         }
     }
 
+    /// <summary>
+    /// The SubtractHealth method will subtract health from the creature. If the health subtracted is less than 0, the health will be set to 0 and the creature will die.
+    /// </summary>
+    /// <param name="health">The amount of health to subtract.</param>
     public void SubtractHealth(float health)
     {
         if (Health - health < MinHealth)
@@ -238,26 +242,45 @@ public class HumanAgent : MonoBehaviour, ICreature
         SubtractEnergy((Mathf.Abs(a) + Mathf.Abs(t)) * _energyMultiplier);
     }
 
+    /// <summary>
+    /// The SetTarget method will set the target for the creature to move towards.
+    /// </summary>
+    /// <param name="target">The target to move towards.</param>
     public void SetTarget(GameObject target)
     {
         MyTarget = target;
     }
 
+    /// <summary>
+    /// The SetManager method will set the population manager for the creature.
+    /// </summary>
+    /// <param name="manager">The population manager.</param>
     public void SetManager(PopulationManager manager)
     {
         MyManager = manager;
     }
 
+    /// <summary>
+    /// The SetNumber method will set the number of the creature, which can be used as an ID.
+    /// </summary>
+    /// <param name="number">The number of the creature.</param>
     public void SetNumber(int number)
     {
         MyNumber = number;
     }
 
+    /// <summary>
+    /// The SetNeuralNetwork method will configure the brain of the creature.
+    /// </summary>
+    /// <param name="neuralNetwork">The neural network to use for the brain.</param>
     public void SetNeuralNetwork(NeuralNetwork neuralNetwork)
     {
         MyBrain = neuralNetwork;
     }
 
+    /// <summary>
+    /// The CreatureUpdate method performs all of the updates for the creature.
+    /// </summary>
     public void CreatureUpdate()
     {
         if (isDead) return;
@@ -309,6 +332,10 @@ public class HumanAgent : MonoBehaviour, ICreature
         _lastUpdateTime = Time.time;
     }
 
+    /// <summary>
+    /// The Death method is called when the creature dies.
+    /// </summary>
+    /// <param name="reason">The reason the creature died.</param>
     void Death(int reason = 0)
     {
         if (isDead) return;
@@ -334,13 +361,10 @@ public class HumanAgent : MonoBehaviour, ICreature
         }
 
         // Add MyBrain to the MyManager.AgentNets array
-        NeuralNetwork[] temp = new NeuralNetwork[MyManager.AgentNets.Length + 1];
-        MyManager.AgentNets.CopyTo(temp, 0);
-        temp[MyManager.AgentNets.Length] = MyBrain;
-        MyManager.AgentNets = temp;
+        MyManager.AgentNets.Add(MyBrain);
+        MyManager.Agents.Remove(this.gameObject);
         Destroy(gameObject);
     }
-
     void OnTriggerStay(Collider other)
     {
         if (isDead) return;
@@ -355,21 +379,33 @@ public class HumanAgent : MonoBehaviour, ICreature
         }
     }
 
-    public Node[] ProcessInputs()
+    /// <summary>
+    /// The ProcessInputs method will process the inputs for the creature, and run the neural network.
+    /// </summary>
+    /// <returns>The output nodes from the neural network.</returns>
+    public Node[] ProcessInputs(float[] suppliedInputs = null)
     {
         // Get the inputs
         float[] inputs = new float[BrainInputNodesCount];
-        inputs[0] = 0;                      // unused
-        inputs[1] = _transform.position.x;  // x position sensor
-        inputs[2] = _transform.position.z;  // z position sensor
-        inputs[3] = 0;                      // food sensor
-        inputs[4] = 0;                      // wall sensor 1 forward+left
-        inputs[5] = 0;                      // wall sensor 2 forward+right
-        inputs[6] = GetEnergy;              // energy sensor
-        inputs[7] = GetHealth;              // health sensor
-        inputs[8] = GetAge;                 // age sensor
-        inputs[9] = BrainFitness;           // brain fitness sensor
-        inputs[10] = _inputBias;             // bias
+        if (suppliedInputs == null)
+        {
+            // These are the default configured inputs
+            inputs[0] = 0;                      // unused
+            inputs[1] = _transform.position.x;  // x position sensor
+            inputs[2] = _transform.position.z;  // z position sensor
+            inputs[3] = 0;                      // food sensor
+            inputs[4] = 0;                      // wall sensor 1 forward+left
+            inputs[5] = 0;                      // wall sensor 2 forward+right
+            inputs[6] = GetEnergy;              // energy sensor
+            inputs[7] = GetHealth;              // health sensor
+            inputs[8] = GetAge;                 // age sensor
+            inputs[9] = BrainFitness;           // brain fitness sensor
+            inputs[10] = _inputBias;            // bias
+        }
+        else
+        {
+            inputs = suppliedInputs;
+        }
 
         Vector3 forward = _transform.forward;
         Vector3 right = _transform.right;
@@ -431,25 +467,22 @@ public class HumanAgent : MonoBehaviour, ICreature
         return inputNodesOutputValues;
     }
 
+    /// <summary>
+    /// The Save method will save the creature's brain to a file.
+    /// </summary>
+    /// <param name="path">The path to save the file to.</param>
     public void Save(string path)
     {
         string jsonString = JsonUtility.ToJson(MyBrain);
         using StreamWriter writer = new(path);
-        foreach (Node node in MyBrain.Nodes)
-        {
-            if (node.Value != 0)
-                jsonString += JsonUtility.ToJson(node);
-        }
-        foreach (Connection connection in MyBrain.Connections)
-        {
-            if (connection.Weight != 0)
-                jsonString += JsonUtility.ToJson(connection);
-        }
-        //
         writer.Write(jsonString);
         writer.Close();
     }
 
+    /// <summary>
+    /// The Load method will load the creature's brain from a file.
+    /// </summary>
+    /// <param name="path">The path to load the file from.</param>
     public void Load(string path)
     {
         using StreamReader reader = new(path);
