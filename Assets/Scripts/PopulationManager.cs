@@ -49,7 +49,8 @@ public class PopulationManager : MonoBehaviour
     [SerializeField] private int _trialTime = 10;
     [SerializeField] private int _generation = 1;
     [SerializeField] private List<GameObject> _agents = new();
-    [SerializeField] private NeuralNetwork[] _agentNets = new NeuralNetwork[] { };
+    [SerializeField] private List<NeuralNetwork> _agentNets = new List<NeuralNetwork>();
+    [SerializeField] private List<NeuralNetwork> _newSpeciesNets = new();
     [SerializeField] private bool _allAgentsDead = false;
     [SerializeField] private float _elapsedSinceLastBest = 0;
     [SerializeField] private float _timeBetweenBest = 5;
@@ -74,7 +75,8 @@ public class PopulationManager : MonoBehaviour
     public int TrialTime { get => _trialTime; set => _trialTime = value; }
     public int Generation { get => _generation; set => _generation = value; }
     public List<GameObject> Agents { get => _agents; set => _agents = value; }
-    public NeuralNetwork[] AgentNets { get => _agentNets; set => _agentNets = value; }
+    public List<NeuralNetwork> AgentNets { get => _agentNets; set => _agentNets = value; }
+    public List<NeuralNetwork> NewSpeciesNets { get => _newSpeciesNets; set => _newSpeciesNets = value; }
     public bool AllAgentsDead { get => _allAgentsDead; set => _allAgentsDead = value; }
     public float ElapsedSinceLastBest { get => _elapsedSinceLastBest; set => _elapsedSinceLastBest = value; }
     public float TimeBetweenBest { get => _timeBetweenBest; set => _timeBetweenBest = value; }
@@ -108,6 +110,14 @@ public class PopulationManager : MonoBehaviour
 
     protected void Update()
     {
+        if (Agents.Count == 0)
+        {
+            AllAgentsDead = true;
+            Generation++;
+
+            Speciation();
+            return;
+        }
         GenerationFitness = CalculateGenerationFitness();
 
         if (SelectedAgent != null)
@@ -115,19 +125,39 @@ public class PopulationManager : MonoBehaviour
             Camera.main.transform.position = new Vector3(SelectedAgent.transform.position.x, Camera.main.transform.position.y, SelectedAgent.transform.position.z);
         }
 
-        if (Agents.Count == 0)
-        {
-            AllAgentsDead = true;
-        }
-        else
-        {
-            AllAgentsDead = false;
-        }
     }
 
-    protected void FixedUpdate()
+    /// <summary>
+    /// This method facilitates the species comparison process.
+    /// </summary>
+    private void Speciation()
     {
+        // Select a random agent from the population of AgentNets, and add it to the NewSpeciesNets list as the first species.
+        int randomAgentNum = UnityEngine.Random.Range(0, AgentNets.Count);
+        NeuralNetwork randomAgent;
+
+        AgentNets = AgentNets;
+        if (AgentNets.Count == 0) return;
+        randomAgent = AgentNets[0];
+
+        for (int i = 0; i < AgentNets.Count; i++)
+        {
+            if (AgentNets[i].CompareTopologies(randomAgent) <= 1)
+            {
+                NewSpeciesNets.Add(AgentNets[i]);
+                AgentNets.RemoveAt(i);
+            }
+        }
+
+        // Remove the random agent from the AgentNets list.
+        if (AgentNets.Contains(AgentNets[randomAgentNum]))
+            AgentNets.RemoveAt(randomAgentNum);
+
+
+        // Repopulate the population with new agents.
+        RepopulateNew();
     }
+
 
     /// <summary>
     /// This method repopulates the population with new agents.
@@ -144,6 +174,33 @@ public class PopulationManager : MonoBehaviour
             agent.GetComponent<HumanAgent>().MyNumber = i;
             agent.GetComponent<HumanAgent>().MyBrain.SpeciesId = Generation;
             Agents.Add(agent);
+        }
+
+        if (NewSpeciesNets.Count > 0)
+        {
+            for (int i = 0; i < NewSpeciesNets.Count; i++)
+            {
+                if (PopulationSize == 0 || NewSpeciesNets.Count == 0) return;
+                for (int j = 0; j < PopulationSize / NewSpeciesNets.Count; j++)
+                {
+                    Vector3 startingPos = new(this.transform.position.x + UnityEngine.Random.Range(-2, 2), 0, this.transform.position.z + UnityEngine.Random.Range(-2, 2));
+                    GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
+                    agent.name = "Agent " + i;
+                    agent.GetComponent<HumanAgent>().MyBrain = new NeuralNetwork(agent.GetComponent<HumanAgent>().BrainInputNodesCount, agent.GetComponent<HumanAgent>().BrainOutputNodesCount);
+                    agent.GetComponent<HumanAgent>().MyManager = this;
+                    agent.GetComponent<HumanAgent>().MyNumber = i;
+                    agent.GetComponent<HumanAgent>().MyBrain.SpeciesId = Generation;
+                    agent.GetComponent<HumanAgent>().MyBrain = NewSpeciesNets[i];
+                    agent.GetComponent<HumanAgent>().MyBrain.Mutate();
+                    if (UnityEngine.Random.Range(0, 100) < 5)
+                        agent.GetComponent<HumanAgent>().MyBrain.AddANode();
+                    if (UnityEngine.Random.Range(0, 100) < 5)
+                        agent.GetComponent<HumanAgent>().MyBrain.AddAConnection();
+                    Agents.Add(agent);
+                    NewSpeciesNets.Remove(NewSpeciesNets[i]);
+                    AgentNets.Remove(AgentNets[i]);
+                }
+            }
         }
 
         AllAgentsDead = false;
