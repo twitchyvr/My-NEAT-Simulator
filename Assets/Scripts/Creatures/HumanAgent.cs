@@ -58,12 +58,12 @@ public class HumanAgent : MonoBehaviour, ICreature
     public float BrainFitness = 0f;
     public float AgentFitness = 0f;
     public float Age = 0;
-    public float MaxAge = 100f;
-    public float Health = 100f;
-    public float MaxHealth = 100f;
+    public float MaxAge = 1000f;
+    public float Health = 1000f;
+    public float MaxHealth = 1000f;
     public float MinHealth = 0f;
-    public float Energy = 100f;
-    public float MaxEnergy = 100f;
+    public float Energy = 1000f;
+    public float MaxEnergy = 1000f;
     public float MinEnergy = 0f;
     public PopulationManager MyManager;
     public NeuralNetwork MyBrain;
