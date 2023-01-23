@@ -47,6 +47,7 @@ public class GameManager : MonoBehaviour
     public GameObject SelectedCreature;
     public GameObject FoodPrefab;
     public GameObject Canvas;
+    public GameObject LineComponentPrefab;
     public float FoodSpawnMaxX = 80;
     public float FoodSpawnMaxZ = 80f;
     public int CreatureSpeciesId = 0;
@@ -197,8 +198,8 @@ public class GameManager : MonoBehaviour
                     nodePos += 15;
                     // reset nodePos to 15 after each layer
                 }
-
-                LineRenderer line = Canvas.GetComponent<LineRenderer>();
+                Canvas canvas = GameObject.Find("Canvas").GetComponent<Canvas>();
+                string showingCreature = "";
 
                 // Look at each connection, and determine which nodes it connects
                 foreach (var connection in creature.MyBrain.Connections)
@@ -206,30 +207,62 @@ public class GameManager : MonoBehaviour
                     if (connection == null) return;
                     if (!connection.Enabled) return;
                     if (!nodePositions.ContainsKey(connection.FromNodeId) || !nodePositions.ContainsKey(connection.ToNodeId)) return;
+                    if (showingCreature != creature.MyNumber.ToString())
+                    {
+                        showingCreature = creature.MyNumber.ToString();
+                        foreach (Transform child in canvas.transform)
+                        {
+                            Destroy(child.gameObject);
+                        }
+                    }
+                    if (canvas.GetComponent<LineRenderer>() != null) return;
+                    GameObject lineObj = Instantiate(LineComponentPrefab, Vector2.zero, Quaternion.identity, canvas.transform);
+                    if (lineObj.name == $"N{creature.MyNumber} {connection.InnovationString()}") return;
+                    lineObj.name = $"N{creature.MyNumber} {connection.InnovationString()}";
+                    LineRenderer line = lineObj.GetComponent<LineRenderer>();
                     // Get the nodes from the Dictionary
-                    Vector2 node1 = nodePositions[connection.FromNodeId];
-                    Vector2 node2 = nodePositions[connection.ToNodeId];
+                    Vector3 node1 = new(Screen.width - nodePositions[connection.ToNodeId].x, nodePositions[connection.ToNodeId].y, nodePositions[connection.ToNodeId].z);
+                    Vector3 node2 = new(Screen.width - nodePositions[connection.FromNodeId].x, nodePositions[connection.FromNodeId].y, nodePositions[connection.FromNodeId].z);
                     // Draw a line between the nodes
+                    lineObj.GetComponent<LineRenderer>().positionCount = 2;
+
+                    // Draw the color of the line based on how negative or positive the weight is, with red being negative and green being positive
+                    if (connection.Weight > 0)
+                    {
+                        line.material.color = new Color(1 - Sigmoid(Math.Abs(connection.Weight)), Sigmoid(Math.Abs(connection.Weight)), 0);
+                    }
+                    else
+                    {
+                        line.material.color = new Color(Sigmoid(Math.Abs(connection.Weight)), 1 - Sigmoid(Math.Abs(connection.Weight)), 0);
+                    }
+
+                    line.material.EnableKeyword("_EMISSION");
+                    line.startWidth = Sigmoid(Math.Abs(connection.Weight));
+                    line.endWidth = Sigmoid(Math.Abs(connection.Weight));
                     line.SetPosition(0, node1);
                     line.SetPosition(1, node2);
-                    line.startWidth = 1f;
-                    line.endWidth = 1f;
-
-                    // Draw the weight of the connection on the line
-                    line.material.SetColor("_Color", Color.red);
-                    line.material.SetColor("_EmissionColor", Color.red);
-                    line.material.EnableKeyword("_EMISSION");
+                    line.renderingLayerMask = 5;
                     line.useWorldSpace = false;
                     line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     line.receiveShadows = false;
-                    line.gameObject.layer = 0;
-                    line.material.renderQueue = 3000;
+                    line.sortingLayerID = SortingLayer.NameToID("UI");
+                    line.alignment = LineAlignment.TransformZ;
 
                     // Remove alpha transparency from the line
-                    line.material.SetFloat("_Mode", 2);
+                    line.material.SetFloat("_Mode", 1);
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// This method is used to draw the nodes and connections of the creature on the GUI.
+    /// </summary>
+    /// <param name="weight">The weight of the connection </param>
+    /// <returns>The Sigmoid of the weight, between 0 and 1</returns>
+    private float Sigmoid(float weight)
+    {
+        return 1 / (1 + Mathf.Exp(-weight));
     }
 
     public void Save(string path)
