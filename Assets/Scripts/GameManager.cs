@@ -106,6 +106,17 @@ public class GameManager : MonoBehaviour
             //SelectedCreature.GetComponent<HumanAgent>().MyBrain.Save(creature.name + "-BrainSave.json");
             //Debug.Log("Saved Brain " + creature.name + " to file: " + creature.name + "-BrainSave.json");
         }
+
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            int newNodeId = SelectedCreature.GetComponent<HumanAgent>().MyBrain.AddANode();
+            Debug.Log("Added a node " + newNodeId + " on creature: " + creature.name);
+        }
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            int newConnId = SelectedCreature.GetComponent<HumanAgent>().MyBrain.AddAConnection();
+            Debug.Log("Added a connection " + newConnId + " on creature: " + creature.name);
+        }
     }
 
     private void GetCreatureInfo()
@@ -221,8 +232,8 @@ public class GameManager : MonoBehaviour
                     lineObj.name = $"N{creature.MyNumber} {connection.InnovationString()}";
                     LineRenderer line = lineObj.GetComponent<LineRenderer>();
                     // Get the nodes from the Dictionary
-                    Vector3 node1 = new(Screen.width - nodePositions[connection.ToNodeId].x, nodePositions[connection.ToNodeId].y, nodePositions[connection.ToNodeId].z);
-                    Vector3 node2 = new(Screen.width - nodePositions[connection.FromNodeId].x, nodePositions[connection.FromNodeId].y, nodePositions[connection.FromNodeId].z);
+                    Vector3 node1 = new(nodePositions[connection.FromNodeId].x - (Screen.width / 1.8f - canvas.gameObject.transform.position.x), 10, nodePositions[connection.FromNodeId].z - (Screen.height / 6f - canvas.gameObject.transform.position.z));
+                    Vector3 node2 = new(nodePositions[connection.ToNodeId].x - (Screen.width / 1.8f - canvas.gameObject.transform.position.x), 10, nodePositions[connection.ToNodeId].z - (Screen.height / 6f - canvas.gameObject.transform.position.z));
                     // Draw a line between the nodes
                     lineObj.GetComponent<LineRenderer>().positionCount = 2;
 
@@ -239,17 +250,12 @@ public class GameManager : MonoBehaviour
                     line.material.EnableKeyword("_EMISSION");
                     line.startWidth = Sigmoid(Math.Abs(connection.Weight));
                     line.endWidth = Sigmoid(Math.Abs(connection.Weight));
-                    line.SetPosition(0, node1);
-                    line.SetPosition(1, node2);
-                    line.renderingLayerMask = 5;
-                    line.useWorldSpace = false;
+                    line.alignment = LineAlignment.View;
+                    line.SetPositions(new Vector3[] { node1, node2 });
+                    line.useWorldSpace = true;
                     line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     line.receiveShadows = false;
                     line.sortingLayerID = SortingLayer.NameToID("UI");
-                    line.alignment = LineAlignment.TransformZ;
-
-                    // Remove alpha transparency from the line
-                    line.material.SetFloat("_Mode", 1);
                 }
             }
         }
