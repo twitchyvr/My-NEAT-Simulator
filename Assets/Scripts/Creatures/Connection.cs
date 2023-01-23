@@ -118,6 +118,11 @@ public class Connection
         return "[" + innovationId + "] = " + fromNodeId + " -> " + ToNodeId + " : " + weight;
     }
 
+    public string InnovationString()
+    {
+        return "[" + fromNodeId + " -> " + ToNodeId + "]";
+    }
+
     public float Init()
     {
         return Weight = UnityEngine.Random.Range(-20f, 20f);
