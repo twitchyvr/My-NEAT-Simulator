@@ -46,8 +46,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 {
 
     #region Settable Variables
-    [SerializeField] public Node[] Nodes = new Node[] { }; //{ get { return _nodes; } }
-    [SerializeField] public Connection[] Connections = new Connection[] { }; // { get { return _connections; } }
+    [SerializeField] public Node[] Nodes = new Node[] { };
+    [SerializeField] public List<Connection> Connections = new();
     [SerializeField] public int SpeciesId;
     #endregion
 
@@ -169,10 +169,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                         }
 
                         Connection connection = new(connId, thisNode.Id, otherNode.Id, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
-                        Connection[] tempConnections = Connections;
-                        Connections = new Connection[connId + 1];
-                        Array.Copy(tempConnections, Connections, tempConnections.Length);
-                        Connections[connId] = connection;
+                        Connections.Add(connection);
                     }
                 }
             }
@@ -185,7 +182,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     public void AddANode()
     {
         // Select a random connection
-        int connId = UnityEngine.Random.Range(1, Connections.Length);
+        int connId = UnityEngine.Random.Range(1, Connections.Count);
 
         // If the connection is already disabled, return
         if (!Connections[connId].Enabled)
@@ -212,11 +209,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         Connection newConn1 = new(connId1, Connections[connId].FromNodeId, nodeId, 1f, true, true);
         Connection newConn2 = new(connId2, nodeId, Connections[connId].ToNodeId, Connections[connId].Weight, true, true);
         // Add the new connections to the array, but first we need to add the new connections to the end of the array
-        Connection[] tempArray = new Connection[Connections.Length + 2];
-        Connections.CopyTo(tempArray, 0);
-        tempArray[Connections.Length] = newConn1;
-        tempArray[Connections.Length + 1] = newConn2;
-        Connections = tempArray;
+        Connections.Add(newConn1);
+        Connections.Add(newConn2);
 
         // Update the layer property of all nodes
         foreach (Node node in Nodes)
