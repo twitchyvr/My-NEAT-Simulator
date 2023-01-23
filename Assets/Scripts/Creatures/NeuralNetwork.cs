@@ -203,12 +203,40 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         Connections.Add(newConn1);
         Connections.Add(newConn2);
 
-        // Update the layer property of all nodes
-        foreach (Node node in Nodes)
+        int _maxLayer = 0;
+        for (int i = 0; i < Nodes.Count; i++)
         {
-            if (node.Id == Connections[connId].FromNodeId)
+            if (Nodes[i].NodeLayer > _maxLayer)
             {
-                node.NodeLayer = Nodes[Connections[connId].FromNodeId].NodeLayer + 1;
+                _maxLayer = Nodes[i].NodeLayer;
+            }
+        }
+        _maxLayer = _maxLayer + 1;
+
+        // Update the layer property of all nodes, and move them to the correct layer.  Don't simply move hidden nodes to the highest layer.  Use logic to determine which layer each hidden node is in.
+        for (int i = 0; i < Nodes.Count; i++)
+        {
+            if (Nodes[i].Type == Node.NodeType.Input || Nodes[i].Type == Node.NodeType.Bias)
+            {
+                Nodes[i].NodeLayer = 1;
+            }
+            else if (Nodes[i].Type == Node.NodeType.Output)
+            {
+                Nodes[i].NodeLayer = _maxLayer;
+            }
+            else
+            {
+                // This is a hidden node
+                // Find the layer of the node that is connected to this hidden node
+                int layer = 1;
+                for (int j = 0; j < Connections.Count; j++)
+                {
+                    if (Connections[j].ToNodeId == Nodes[i].Id)
+                    {
+                        layer = Nodes[Connections[j].FromNodeId].NodeLayer;
+                    }
+                }
+                Nodes[i].NodeLayer = layer + 1;
             }
         }
 
@@ -258,7 +286,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 isEnabled = false;
             }
             Connection connection = new(newConnId, node1, node2, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
-            Connections[newConnId] = connection;
+            Connections.Add(connection);
         }
 
         // If the connection is from a hidden node to an output node, create the connection
@@ -270,7 +298,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 isEnabled = false;
             }
             Connection connection = new(newConnId, node1, node2, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
-            Connections[newConnId] = connection;
+            Connections.Add(connection);
         }
 
         // If the connection is from a hidden node to a hidden node on a different layer, create the connection
@@ -282,7 +310,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 isEnabled = false;
             }
             Connection connection = new(newConnId, node1, node2, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
-            Connections[newConnId] = connection;
+            Connections.Add(connection);
         }
 
         // If the connection is from a hidden node to a hidden node on the same layer, and the connection is already enabled, disable it
@@ -483,7 +511,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         // Then goes back to scanning through the node array looking for nodes in the next layer, and repeats the process until it gets to the end.
         // This approach is a little more efficient than the approach used in the original NEAT paper, but it is functionally equivalent.
 
-        int _maxLayer = 0;
+        int _maxLayer = 1;
         // Find the maximum layer
         for (int i = 0; i < Nodes.Count; i++)
         {
@@ -513,7 +541,23 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                         // If the connection is enabled, and the connection's input node is the node we are looking for, add the connection's weight to the node's value
                         if (connection.Enabled && connection.FromNodeId == node.Id)
                         {
-                            node.Value += Nodes[connection.FromNodeId].Value * connection.Weight;
+
+                            try
+                            {
+                                node.Value += Nodes[connection.FromNodeId].Value * connection.Weight;
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.Log("--------------------");
+                                Debug.Log("Exception: " + e.Message);
+                                Debug.Log("Node ID: " + node.Id);
+                                Debug.Log("Node Type: " + node.Type);
+                                Debug.Log("Node Layer: " + node.NodeLayer);
+                                Debug.Log("From Node ID: " + connection.FromNodeId);
+                                Debug.Log("To Node ID: " + connection.ToNodeId);
+                                Debug.Log("Connection Weight: " + connection.Weight);
+                                Debug.Log("Connection Enabled: " + connection.Enabled);
+                            }
                         }
                     }
 

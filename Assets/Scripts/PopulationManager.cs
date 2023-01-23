@@ -181,7 +181,10 @@ public class PopulationManager : MonoBehaviour
             for (int i = 0; i < NewSpeciesNets.Count; i++)
             {
                 if (PopulationSize == 0 || NewSpeciesNets.Count == 0) return;
-                for (int j = 0; j < PopulationSize / NewSpeciesNets.Count; j++)
+                int newSpeciesPopSize = 0;
+                try { newSpeciesPopSize = PopulationSize / NewSpeciesNets.Count; }
+                catch (DivideByZeroException e) { Debug.Log(e); }
+                for (int j = 0; j < newSpeciesPopSize; j++)
                 {
                     Vector3 startingPos = new(this.transform.position.x + UnityEngine.Random.Range(-2, 2), 0, this.transform.position.z + UnityEngine.Random.Range(-2, 2));
                     GameObject agent = Instantiate(AgentPrefab, startingPos, this.transform.rotation);
@@ -197,8 +200,7 @@ public class PopulationManager : MonoBehaviour
                     if (UnityEngine.Random.Range(0, 100) < 5)
                         agent.GetComponent<HumanAgent>().MyBrain.AddAConnection();
                     Agents.Add(agent);
-                    NewSpeciesNets.Remove(NewSpeciesNets[i]);
-                    AgentNets.Remove(AgentNets[i]);
+                    AgentNets.Remove(NewSpeciesNets[i]);
                 }
             }
         }
