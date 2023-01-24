@@ -135,50 +135,28 @@ public class PopulationManager : MonoBehaviour
         // Select a random agent from the population of AgentNets, and add it to the NewSpeciesNets list as the first species.
         int randomAgentNum = UnityEngine.Random.Range(0, AgentNets.Count);
         NeuralNetwork randomAgent;
+        int speciesNum = 1;
 
         AgentNets = AgentNets;
-        if (AgentNets.Count == 0) return;
-        randomAgent = AgentNets[0];
-
-        // Add the random agent to the NewSpeciesNets list.
-        NewSpeciesNets.Add(randomAgent);
-
-        // Compare the random agent to all other agents in the population.
-        for (int i = 0; i < AgentNets.Count; i++)
+        while (AgentNets.Count > 0)
         {
-            // If the agent is the same as the random agent, skip it.
-            if (AgentNets[i] == randomAgent) continue;
-
-            // If the agent is not the same as the random agent, compare it to the random agent.
-            if (AgentNets[i] != randomAgent)
+            randomAgent = AgentNets[randomAgentNum];
+            NewSpeciesNets.Add(randomAgent);
+            AgentNets.Remove(randomAgent);
+            for (int i = 0; i < AgentNets.Count; i++)
             {
-                // If the agent is not the same as the random agent, compare it to the random agent.
-                if (AgentNets[i].CompareTopologies(randomAgent) == 1f)
+                if (AgentNets[i] == randomAgent) continue;
+                if (AgentNets[i] != randomAgent)
                 {
-                    // If the agent is similar to the random agent, add it to the NewSpeciesNets list.
-                    NewSpeciesNets.Add(AgentNets[i]);
+                    if (AgentNets[i].CompareTopologies(randomAgent) == 1f)
+                    {
+                        NewSpeciesNets.Add(AgentNets[i]);
+                        AgentNets.Remove(AgentNets[i]);
+                    }
                 }
             }
+            speciesNum++;
         }
-
-        // Find the next random agent in the population.
-        for (int i = 0; i < AgentNets.Count; i++)
-        {
-            // If the agent is the same as the random agent, skip it.
-            if (AgentNets[i] == randomAgent) continue;
-
-            // If the agent is not the same as the random agent, compare it to the random agent.
-            if (AgentNets[i] != randomAgent)
-            {
-                // If the agent is not the same as the random agent, compare it to the random agent.
-                if (AgentNets[i].CompareTopologies(randomAgent) == 1f)
-                {
-                    // If the agent is similar to the random agent, add it to the NewSpeciesNets list.
-                    NewSpeciesNets.Add(AgentNets[i]);
-                }
-            }
-        }
-
 
         // Repopulate the population with new agents.
         RepopulateNew();
