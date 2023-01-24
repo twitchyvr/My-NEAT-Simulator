@@ -51,7 +51,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     #endregion
 
     #region Private Variables
-    private float _defaultBias = 0.25f;
+    private float _defaultBias = 0.05f;
+    private float _matchingConnIdWeightsSum = 0f;
     #endregion
 
     #region Properties
@@ -260,20 +261,20 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         {
             if (conn.FromNodeId == node1 && conn.ToNodeId == node2)
             {
-                return -1;
+                return 0;
             }
         }
 
         // If the connection is from an input node to an output node, return
         if (Nodes[node1].Type == Node.NodeType.Input && Nodes[node2].Type == Node.NodeType.Output)
         {
-            return -1;
+            return 0;
         }
 
         // If the connection is from a bias node to an output node, return
         if (Nodes[node1].Type == Node.NodeType.Bias && Nodes[node2].Type == Node.NodeType.Output)
         {
-            return -1;
+            return 0;
         }
 
         // If the connection is from an input node to a hidden node, create the connection
@@ -281,10 +282,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         {
 
             bool isEnabled = true;
-            if (UnityEngine.Random.Range(1, 100) < 5)
-            {
-                isEnabled = false;
-            }
             Connection connection = new(newConnId, node1, node2, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
             Connections.Add(connection);
         }
@@ -293,10 +290,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         if (Nodes[node1].Type == Node.NodeType.Hidden && Nodes[node2].Type == Node.NodeType.Output)
         {
             bool isEnabled = true;
-            if (UnityEngine.Random.Range(1, 100) < 5)
-            {
-                isEnabled = false;
-            }
             Connection connection = new(newConnId, node1, node2, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
             Connections.Add(connection);
         }
@@ -305,10 +298,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         if (Nodes[node1].Type == Node.NodeType.Hidden && Nodes[node2].Type == Node.NodeType.Hidden && Nodes[node1].NodeLayer != Nodes[node2].NodeLayer)
         {
             bool isEnabled = true;
-            if (UnityEngine.Random.Range(1, 100) < 5)
-            {
-                isEnabled = false;
-            }
             Connection connection = new(newConnId, node1, node2, UnityEngine.Random.Range(-20f, 20f), isEnabled, false);
             Connections.Add(connection);
         }
@@ -316,7 +305,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         // If the connection is from a hidden node to a hidden node on the same layer, and the connection is already enabled, disable it
         if (Nodes[node1].Type == Node.NodeType.Hidden && Nodes[node2].Type == Node.NodeType.Hidden && Nodes[node1].NodeLayer == Nodes[node2].NodeLayer)
         {
-
             foreach (Connection conn in Connections)
             {
                 if (conn.FromNodeId == newConnId)
@@ -394,7 +382,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// </summary>
     public void Mutate()
     {
-        Debug.Log("Mutating the network");
         // Loop through all connections
         foreach (Connection conn in Connections)
         {
@@ -544,23 +531,18 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
                             try
                             {
-                                node.Value += Nodes[connection.FromNodeId].Value * connection.Weight;
+                                // Add the connection's weight to the node's value (the connection's weight is multiplied by the output value of the connection's input node)
+                                node.Value += Nodes[connection.FromNodeId - 1].Value * connection.Weight;
                             }
                             catch (Exception e)
                             {
                                 Debug.Log("--------------------");
                                 Debug.Log("Exception: " + e.Message);
-                                Debug.Log("Node ID: " + node.Id);
-                                Debug.Log("Node Type: " + node.Type);
-                                Debug.Log("Node Layer: " + node.NodeLayer);
-                                Debug.Log("From Node ID: " + connection.FromNodeId);
-                                Debug.Log("To Node ID: " + connection.ToNodeId);
-                                Debug.Log("Connection Weight: " + connection.Weight);
-                                Debug.Log("Connection Enabled: " + connection.Enabled);
+                                Debug.Log("Index: " + connection.FromNodeId);
+                                Debug.Log("Range: " + Nodes.Count);
                             }
                         }
                     }
-
                     // Next, apply the activation function to the node's value
                     node.Value = ActivationFunction(node.Value);
                 }
@@ -628,7 +610,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     private float GetTopologyDistance(NeuralNetwork neuralNetwork)
     {
         // Get the number of excess and disjoint genes
-        int[] excessDisjointGenes = GetExcessDisjointGenes(neuralNetwork);
+        float[] excessDisjointGenes = GetExcessDisjointGenes(neuralNetwork);
         float excessDisjointResult = excessDisjointGenes[0] + excessDisjointGenes[1];
         float averageWeightDifference = GetAverageWeightDifference(neuralNetwork);
         float compatibilityDifference = excessDisjointResult + averageWeightDifference;
@@ -643,7 +625,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     private float GetAverageWeightDifference(NeuralNetwork neuralNetwork)
     {
         // Get the number of matching genes
-        int matchingGenes = GetMatchingGenes(neuralNetwork);
+        float matchingGenes = GetMatchingGenes(neuralNetwork);
 
         // Get the total weight difference
         float totalWeightDifference = 0;
@@ -667,10 +649,10 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// </summary>
     /// <param name="neuralNetwork">The neural network to compare to</param>
     /// <returns>The number of matching genes</returns>
-    private int GetMatchingGenes(NeuralNetwork neuralNetwork)
+    private float GetMatchingGenes(NeuralNetwork neuralNetwork)
     {
         // Get the number of matching genes
-        int matchingGenes = 0;
+        float matchingGenes = 0;
         foreach (Connection connection in Connections)
         {
             foreach (Connection connection2 in neuralNetwork.Connections)
@@ -691,16 +673,22 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// </summary>
     /// <param name="neuralNetwork">The neural network to compare to</param>
     /// <returns>The number of excess and disjoint genes in an array of ints</returns>
-    private int[] GetExcessDisjointGenes(NeuralNetwork neuralNetwork)
+    private float[] GetExcessDisjointGenes(NeuralNetwork neuralNetwork)
     {
         // Get the number of excess and disjoint genes
-        int[] excessDisjointGenes = new int[2];
+        float[] excessDisjointGenes = new float[2];
 
         // Get the number of excess genes
         excessDisjointGenes[0] = GetExcessGenes(neuralNetwork);
 
         // Get the number of disjoint genes
         excessDisjointGenes[1] = GetDisjointGenes(neuralNetwork);
+
+        // Normalize the number of excess genes
+        excessDisjointGenes[0] = excessDisjointGenes[0] / Math.Max(Connections.Count, neuralNetwork.Connections.Count);
+
+        // Normalize the number of disjoint genes
+        excessDisjointGenes[1] = excessDisjointGenes[1] / Math.Max(Connections.Count, neuralNetwork.Connections.Count);
 
         // Return the number of excess and disjoint genes
         return excessDisjointGenes;
@@ -711,26 +699,19 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// </summary>
     /// <param name="neuralNetwork">The neural network to compare to</param>
     /// <returns>The number of excess genes</returns>
-    private int GetExcessGenes(NeuralNetwork neuralNetwork)
+    private float GetExcessGenes(NeuralNetwork neuralNetwork)
     {
-        // Get the number of excess genes
-        int excessGenes = 0;
+        float excessGenes = 0;
 
-        // Get the number of genes in the shortest genome
-        int shortestGenome = Math.Min(Connections.Count, neuralNetwork.Connections.Count);
-
-        // Loop through all connections
-        for (int i = 0; i < shortestGenome; i++)
+        // Get the number of excess genes, which are the genes that have innovations ids higher in neuralNetwork than in this neural network.
+        foreach (var gene in neuralNetwork.Connections)
         {
-            // If the innovation number of the connection in this genome is greater than the innovation number of the connection in the other genome
-            if (Connections[i].InnovationId > neuralNetwork.Connections[i].InnovationId)
+            if (gene.InnovationId > this.Connections.Count)
             {
-                // Increment the number of excess genes
                 excessGenes++;
             }
         }
 
-        // Return the number of excess genes
         return excessGenes;
     }
 
@@ -739,26 +720,28 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     /// </summary>
     /// <param name="neuralNetwork">The neural network to compare this neural network to</param>
     /// <returns>The number of disjoint genes between this neural network and the other neural network</returns>
-    private int GetDisjointGenes(NeuralNetwork neuralNetwork)
+    private float GetDisjointGenes(NeuralNetwork neuralNetwork)
     {
-        // Get the number of disjoint genes
         int disjointGenes = 0;
-
-        // Get the number of genes in the shortest genome
-        int shortestGenome = Math.Min(Connections.Count, neuralNetwork.Connections.Count);
-
-        // Loop through all connections
-        for (int i = 0; i < shortestGenome; i++)
+        // Get the number of disjoint genes which are connections in this network that don't exist in neuralNetwork, and vice versa, but reside within the innovation id of neuralNetwork
+        foreach (Connection connectionGene in this.Connections)
         {
-            // If the innovation number of the connection in this genome is less than the innovation number of the connection in the other genome
-            if (Connections[i].InnovationId < neuralNetwork.Connections[i].InnovationId)
+            bool existsInOtherNetwork = false;
+            foreach (Connection otherConnectionGene in neuralNetwork.Connections)
             {
-                // Increment the number of disjoint genes
-                disjointGenes++;
+                if (connectionGene.InnovationId == otherConnectionGene.InnovationId)
+                {
+                    existsInOtherNetwork = true;
+                    break;
+                }
+                if (!existsInOtherNetwork)
+                {
+                    disjointGenes++;
+                }
             }
+
         }
 
-        // Return the number of disjoint genes
         return disjointGenes;
     }
 

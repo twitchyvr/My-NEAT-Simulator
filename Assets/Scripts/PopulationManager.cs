@@ -140,22 +140,50 @@ public class PopulationManager : MonoBehaviour
         if (AgentNets.Count == 0) return;
         randomAgent = AgentNets[0];
 
+        // Add the random agent to the NewSpeciesNets list.
+        NewSpeciesNets.Add(randomAgent);
+
+        // Compare the random agent to all other agents in the population.
         for (int i = 0; i < AgentNets.Count; i++)
         {
-            if (AgentNets[i].CompareTopologies(randomAgent) <= 1)
+            // If the agent is the same as the random agent, skip it.
+            if (AgentNets[i] == randomAgent) continue;
+
+            // If the agent is not the same as the random agent, compare it to the random agent.
+            if (AgentNets[i] != randomAgent)
             {
-                NewSpeciesNets.Add(AgentNets[i]);
-                AgentNets.RemoveAt(i);
+                // If the agent is not the same as the random agent, compare it to the random agent.
+                if (AgentNets[i].CompareTopologies(randomAgent) == 1f)
+                {
+                    // If the agent is similar to the random agent, add it to the NewSpeciesNets list.
+                    NewSpeciesNets.Add(AgentNets[i]);
+                }
             }
         }
 
-        // Remove the random agent from the AgentNets list.
-        if (AgentNets.Contains(AgentNets[randomAgentNum]))
-            AgentNets.RemoveAt(randomAgentNum);
+        // Find the next random agent in the population.
+        for (int i = 0; i < AgentNets.Count; i++)
+        {
+            // If the agent is the same as the random agent, skip it.
+            if (AgentNets[i] == randomAgent) continue;
+
+            // If the agent is not the same as the random agent, compare it to the random agent.
+            if (AgentNets[i] != randomAgent)
+            {
+                // If the agent is not the same as the random agent, compare it to the random agent.
+                if (AgentNets[i].CompareTopologies(randomAgent) == 1f)
+                {
+                    // If the agent is similar to the random agent, add it to the NewSpeciesNets list.
+                    NewSpeciesNets.Add(AgentNets[i]);
+                }
+            }
+        }
 
 
         // Repopulate the population with new agents.
         RepopulateNew();
+        // Clear the AgentNets list.
+        AgentNets.Clear();
     }
 
 
