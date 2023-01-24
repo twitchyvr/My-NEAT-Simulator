@@ -319,12 +319,23 @@ public class HumanAgent : MonoBehaviour, ICreature
         // Add the fitness of the creature based on the distance from the starting position
         AgentFitness += Vector3.Distance(_transform.position, _startingPosition);
 
+
         // If the outputs array has a value for the first and second output nodes, then use those values to move the creature
         if (outputs.Length > 0)
         {
             AgentMoveAcceleration = outputs[0].Value;
             AgentTurnTorque = outputs[1].Value;
         }
+
+        // If the agent is sitting still, but only spinning then subtract from the fitness or doing anything at all
+        if (AgentMoveAcceleration == 0f && AgentTurnTorque != 0f)
+        {
+            Death();
+        }
+
+
+        // Combine the fitness of the agent and the fitness of the brain to get the total fitness
+        BrainFitness += AgentFitness;
 
         MyBrain.Fitness = BrainFitness;
 
