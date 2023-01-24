@@ -234,7 +234,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 {
                     if (Connections[j].ToNodeId == Nodes[i].Id)
                     {
-                        layer = Nodes[Connections[j].FromNodeId].NodeLayer;
+                        layer = Nodes[Connections[j].FromNodeId - 1].NodeLayer;
                     }
                 }
                 Nodes[i].NodeLayer = layer + 1;
@@ -528,19 +528,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                         // If the connection is enabled, and the connection's input node is the node we are looking for, add the connection's weight to the node's value
                         if (connection.Enabled && connection.FromNodeId == node.Id)
                         {
-
-                            try
-                            {
-                                // Add the connection's weight to the node's value (the connection's weight is multiplied by the output value of the connection's input node)
-                                node.Value += Nodes[connection.FromNodeId - 1].Value * connection.Weight;
-                            }
-                            catch (Exception e)
-                            {
-                                Debug.Log("--------------------");
-                                Debug.Log("Exception: " + e.Message);
-                                Debug.Log("Index: " + connection.FromNodeId);
-                                Debug.Log("Range: " + Nodes.Count);
-                            }
+                            // Add the connection's weight to the node's value (the connection's weight is multiplied by the output value of the connection's input node)
+                            node.Value += Nodes[connection.FromNodeId - 1].Value * connection.Weight;
                         }
                     }
                     // Next, apply the activation function to the node's value
