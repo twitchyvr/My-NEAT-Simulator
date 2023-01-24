@@ -63,10 +63,7 @@ public class GameManager : MonoBehaviour
     protected void Awake()
     {
         // Instantiate food prefabs around the map randomly within a specific x and z range.
-        for (int i = 0; i < FoodCount; i++)
-        {
-            Instantiate(FoodPrefab, new Vector3(UnityEngine.Random.Range(-FoodSpawnMaxX, FoodSpawnMaxX), 0, UnityEngine.Random.Range(-FoodSpawnMaxZ, FoodSpawnMaxZ)), Quaternion.identity);
-        }
+        PopulateFood();
     }
     #endregion
 
@@ -96,6 +93,9 @@ public class GameManager : MonoBehaviour
             CreatureHealth = creature.Health;
             CreatureAge = creature.Age;
             CreatureEnergy = creature.Energy;
+            CreatureSpeciesId = creature.SpeciesId;
+            CreatureBrainFitness = creature.MyBrain.Fitness;
+            CreatureAgentFitness = creature.AgentFitness;
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -188,28 +188,39 @@ public class GameManager : MonoBehaviour
                 // Then we go through the connection array and draw the lines between the nodes - and color code them for clarity
                 // We do not want to normally display disabled connections but the option to do so should be available
 
+                CanvasRenderer canvas = GameObject.Find("Panel").GetComponent<CanvasRenderer>();
                 int currentLayerNumber = 0;
-                int currentLayerWidth = 300;
+                int currentLayerWidth = 500;
                 Dictionary<int, Vector3> nodePositions = new();
                 foreach (var node in creature.MyBrain.Nodes)
                 {
-                    if (currentLayerNumber != node.NodeLayer)
+                    // Check if we have a new layer
+                    if (node.NodeLayer != currentLayerNumber)
                     {
-                        int oldLayerNum = currentLayerNumber;
-                        nodePos = 15;
-                        currentLayerWidth -= 100;
+                        // We have a new layer, so we need to move to the next column
                         currentLayerNumber = node.NodeLayer;
+                        currentLayerWidth += 100;
+                        nodePos = 115;
                     }
+
+                    // Check if we have a new node in the current layer
+                    if (!nodePositions.ContainsKey(node.Id))
+                    {
+                        // We have a new node in the current layer, so we need to move to the next row
+                        nodePositions.Add(node.Id, new Vector3(canvas.transform.position.normalized.x - currentLayerWidth, 0, canvas.transform.position.normalized.z - nodePos));
+                    }
+
                     // Draw the node, based on its layer and the position within its layer, then label it with the Id.
-                    GUI.Label(new Rect(Screen.width - currentLayerWidth, nodePos, 300, 20), $"N{node.Id}");
+                    GUI.Label(new Rect(canvas.transform.localPosition.x + currentLayerWidth, nodePos, 300, 20), $"N{node.Id},{node.NodeLayer},({node.Type})");
                     // Draw a 5x5 square at the position of the node
-                    GUI.Box(new Rect(Screen.width - currentLayerWidth - 5, nodePos + 8, 5, 5), "");
+                    GUI.Box(new Rect(canvas.transform.localPosition.x + currentLayerWidth - 5, nodePos + 8, 5, 5), "");
                     // Add the node to the dictionary
-                    nodePositions.Add(node.Id, new Vector3(Screen.width - currentLayerWidth - 2, 0, nodePos + 4));
                     nodePos += 15;
                     // reset nodePos to 15 after each layer
+
                 }
-                Canvas canvas = GameObject.Find("Canvas").GetComponent<Canvas>();
+
+
                 string showingCreature = "";
 
                 // Look at each connection, and determine which nodes it connects
@@ -232,8 +243,8 @@ public class GameManager : MonoBehaviour
                     lineObj.name = $"N{creature.MyNumber} {connection.InnovationString()}";
                     LineRenderer line = lineObj.GetComponent<LineRenderer>();
                     // Get the nodes from the Dictionary
-                    Vector3 node1 = new(nodePositions[connection.FromNodeId].x - (Screen.width / 1.8f - canvas.gameObject.transform.position.x), 10, nodePositions[connection.FromNodeId].z - (Screen.height / 6f - canvas.gameObject.transform.position.z));
-                    Vector3 node2 = new(nodePositions[connection.ToNodeId].x - (Screen.width / 1.8f - canvas.gameObject.transform.position.x), 10, nodePositions[connection.ToNodeId].z - (Screen.height / 6f - canvas.gameObject.transform.position.z));
+                    Vector3 node1 = new(nodePositions[connection.FromNodeId].x - (Screen.width / 1.8f - canvas.transform.position.x), 10, nodePositions[connection.FromNodeId].z - (Screen.height / 6f - canvas.transform.position.z));
+                    Vector3 node2 = new(nodePositions[connection.ToNodeId].x - (Screen.width / 1.8f - canvas.transform.position.x), 10, nodePositions[connection.ToNodeId].z - (Screen.height / 6f - canvas.transform.position.z));
                     // Draw a line between the nodes
                     lineObj.GetComponent<LineRenderer>().positionCount = 2;
 
@@ -281,6 +292,22 @@ public class GameManager : MonoBehaviour
     #endregion
     #region Methods
     // Your custom methods go here
+
+    private void PopulateFood()
+    {
+        for (int i = 0; i < FoodCount; i++)
+        {
+            Instantiate(FoodPrefab, new Vector3(UnityEngine.Random.Range(-FoodSpawnMaxX, FoodSpawnMaxX), 0, UnityEngine.Random.Range(-FoodSpawnMaxZ, FoodSpawnMaxZ)), Quaternion.identity);
+        }
+    }
+
+    private void RemoveAllFood()
+    {
+        foreach (GameObject food in GameObject.FindGameObjectsWithTag("Food"))
+        {
+            Destroy(food);
+        }
+    }
 
     #endregion
 }
